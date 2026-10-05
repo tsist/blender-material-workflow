@@ -1,0 +1,31 @@
+name: Independent extension and skills
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python: ['3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -p "test_*.py" -v
+      - run: python scripts/check_release.py
+      - run: python scripts/check_skills.py
+      - run: python scripts/build_release.py --output dist
+      - run: python scripts/build_release.py --output dist --verify
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-latest' && matrix.python == '3.13'
+        with:
+          name: material-workflow-release-candidates
+          path: dist/*
+          if-no-files-found: error
