@@ -83,7 +83,7 @@ class MW_PT_handoff(bpy.types.Panel):
 
 CLASSES=(MW_OT_handoff,MW_OT_handoff_refresh,MW_OT_handoff_cancel,MW_OT_handoff_open,MW_OT_handoff_recover,MW_OT_handoff_retry,MW_PT_handoff)
 source_root=Path(__file__).resolve().parents[2]
-PROPS={'mw_cli_root':StringProperty(name='blenderctl 后端源码目录',subtype='DIR_PATH',default=str(source_root) if (source_root/'tools/blenderctl/cli.py').is_file() else ''),
+PROPS={'mw_cli_root':StringProperty(name='Blender AI 项目目录',subtype='DIR_PATH',default=str(source_root) if (source_root/'tools/blenderctl/cli.py').is_file() else ''),
        'mw_handoff_root':StringProperty(name='持久快照根目录',subtype='DIR_PATH'),
        'mw_handoff_mode':EnumProperty(name='执行范围',items=[('SINGLE','单材质草稿','包含当前图层字段'),('BATCH','已提交批量草稿','先确认回写分配、目标和机位')]),
        'mw_handoff_timeout':IntProperty(name='后台期限（秒）',default=300,min=30,max=3600),

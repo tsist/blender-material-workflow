@@ -16,7 +16,7 @@ def archive(entries):
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for name, content in sorted(entries):
-            item = zipfile.ZipInfo(name, date_time=(2026, 10, 6, 0, 0, 0))
+            item = zipfile.ZipInfo(name, date_time=(2026, 10, 4, 0, 0, 0))
             item.create_system = 3
             item.external_attr = 0o100644 << 16
             item.compress_type = zipfile.ZIP_DEFLATED
@@ -42,18 +42,18 @@ def main():
                (p.suffix == '.py' or p.name in {'blender_manifest.toml', 'LICENSE', 'README.md'})]
     required = {'__init__.py', 'blender_manifest.toml', 'LICENSE', 'core.py', 'core_v2.py', 'ui.py', 'job_bridge.py'}
     if not required <= {p.name for p in runtime}: raise SystemExit('Incomplete extension')
-    entries = [('material-workflow-skills-' + skills + '/' + p.relative_to(ROOT).as_posix(), p.read_bytes())
+    entries = [('blender-skills-' + skills + '/' + p.relative_to(ROOT).as_posix(), p.read_bytes())
                for p in files if p.is_relative_to(ROOT / 'skills')]
-    entries.append(('material-workflow-skills-' + skills + '/install_skills.py', (ROOT / 'scripts/install_skills.py').read_bytes()))
+    entries.append(('blender-skills-' + skills + '/install_skills.py', (ROOT / 'scripts/install_skills.py').read_bytes()))
     payloads = {
-        f'material-workflow-{version}.zip': archive([(p.name, p.read_bytes()) for p in runtime]),
+        f'material-workflow-{version}.zip': archive([(p.name, (ROOT / 'docs/EXTENSION_README.md').read_bytes() if p.name == 'README.md' else p.read_bytes()) for p in runtime]),
         f'material-workflow-{version}-source.zip': archive([(f'material-workflow-{version}/' + p.relative_to(ROOT).as_posix(), p.read_bytes()) for p in files]),
-        f'material-workflow-skills-{skills}.zip': archive(entries),
+        f'blender-skills-{skills}.zip': archive(entries),
     }
     rows = [{'file': name, 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)} for name, data in sorted(payloads.items())]
     payloads['release-manifest.json'] = (json.dumps({'extension_version': version, 'skills_bundle_version': skills,
         'license': 'GPL-3.0-or-later', 'repository': 'tsist/blender-material-workflow',
-        'backend': {'repository': 'tsist/blenderctl', 'tested_version': '0.54.2', 'optional_for_local_editing': True},
+        'backend': {'repository': 'tsist/blenderctl', 'tested_version': '0.54.1', 'optional_for_local_editing': True},
         'audited_source_files': len(files), 'extension_files': len(runtime), 'artifacts': rows}, indent=2) + '\n').encode()
     payloads['SHA256SUMS.txt'] = ''.join(hashlib.sha256(data).hexdigest() + '  ' + name + '\n' for name, data in sorted(payloads.items())).encode()
     output = args.output.resolve()

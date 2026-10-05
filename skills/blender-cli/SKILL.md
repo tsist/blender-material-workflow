@@ -2,7 +2,7 @@
 name: blender-cli
 description: 使用 blenderctl 创建、检查、修改 Blender 工作副本，执行渲染、动画、模拟、格式交换与可恢复流水线；用于实际操作已保存工程并验证产物，不用于实时 GUI 操控或纯知识解释。
 metadata:
-  version: "0.2.1"
+  version: "0.2.0"
 ---
 
 # Blender CLI

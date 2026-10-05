@@ -19,4 +19,4 @@
 
 发现脚本：`python <技能目录>/scripts/discover.py --root <仓库根> --command project.override.resync --schema`。零匹配仅表示当前查询无结果，不据此断言能力不存在。
 
-公开文档：[命令索引](https://github.com/tsist/blenderctl/blob/main/docs/CLI_REFERENCE.md)、[兼容范围](https://github.com/tsist/blenderctl/blob/main/docs/COMPATIBILITY.md)、[材质流程](https://github.com/tsist/blender-material-workflow/blob/main/docs/MATERIAL_WORKFLOW.md)。历史本机文档和能力清单不是此技能依赖。
+公开文档：[命令索引](https://github.com/tsist/blenderctl/blob/main/docs/CLI_REFERENCE.md)、[兼容范围](https://github.com/tsist/blenderctl/blob/main/docs/COMPATIBILITY.md)、[材质流程](https://github.com/tsist/blenderctl/blob/main/docs/MATERIAL_WORKFLOW.md)。历史本机文档和能力清单不是此技能依赖。

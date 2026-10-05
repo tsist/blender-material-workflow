@@ -53,7 +53,7 @@ Cycles/Eevee依支持矩阵核对。Eevee用GRAPHICS，不套Cycles设备id/deno
 
 GUI面板用显式草稿和回写：切换分配、另存、后台提交不隐式保存未确认单材质编辑。GUI→后台先保护并保存独立持久快照、封包静态依赖，再提交CLI；候选完成后不自动加载覆盖当前场景。MCP用于实时发现/观察时核对会话身份，通过持久快照交换。多个入口不得同时写同一工程或输出。
 
-具体按钮和交接见[公开 GUI/快照说明](https://github.com/tsist/blender-material-workflow/blob/main/docs/MATERIAL_WORKFLOW.md)：先确认单材质草稿回写，机位/预览分别提交，在 Object Mode 保存独立快照并提交后台。未保存像素、链接库、序列/UDIM及缓存等不支持的依赖先解决；仅save_as不替代草稿回写。安装身份和可见交互仍需现场核对，历史阶段证据不充当当前验证。
+具体按钮和交接见[公开 GUI/快照说明](https://github.com/tsist/blenderctl/blob/main/docs/MATERIAL_WORKFLOW.md)：先确认单材质草稿回写，机位/预览分别提交，在 Object Mode 保存独立快照并提交后台。未保存像素、链接库、序列/UDIM及缓存等不支持的依赖先解决；仅save_as不替代草稿回写。安装身份和可见交互仍需现场核对，历史阶段证据不充当当前验证。
 
 ## 4. 一次有限对照：study
 

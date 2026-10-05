@@ -1,7 +1,5 @@
-# Companion skills 0.2.1
+# Unchanged companion skills 0.2.0
 
-The complete four-skill suite is distributed with the independent plugin. [Install and configure](../skills/README.md). Material guidance still requires a separate blenderctl backend for command discovery and execution; it uses explicit `BLENDERCTL_ROOT` when installed outside that checkout.
+All four sibling skills and their references/scripts/assets are copied byte-for-byte from the existing public source. Their guidance and version remain unchanged. The independent repository ships them together to preserve local links. See [original skill instructions](../skills/README.md).
 
-The 0.2.1 changes are metadata and repository routing. Existing 0.2.0 production guidance is preserved, including image-source constraints, candidate method boundaries and technical/visual acceptance separation. No new speedup or artistic guarantee is claimed.
-
-Checks validate four sibling metadata entries, all local resource links, actual installation into a new destination, byte preservation, collision refusal before any copy, and deterministic packaging. See [release validation](RELEASE_VERIFICATION.md) for runtime scope. Optional Pillow, image generation, MCP and memory remain host dependencies, not automatic installs.
+The normal skill installer refuses existing names before copying; no local personal skill is modified by repository publication. CLI discovery still targets the original blenderctl checkout.

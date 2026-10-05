@@ -14,7 +14,7 @@
 
 ## 材质制作阶段跳转
 
-材料参考、分层、着色节点、贴图及材质验收转 [Blender材质制作技能](../../blender-material-authoring/SKILL.md)。PBR属于其 `references/pbr/framework.md` 章节，不单独设技能。该入口0.2.1已建立原生生图优先硬规则与完整规范：各图层/复杂遮罩首先原生生图，实际受阻才回退Kie等，简单渐变/数学依赖遮罩可用Blender。插件与CLI执行层遵守其内容来源约束。赤陶v008基本验收案例属于材质技能，不计入下方六项candidate领域方法，也不恢复旧退役配方。
+材料参考、分层、着色节点、贴图及材质验收转 [Blender材质制作技能](../../blender-material-authoring/SKILL.md)。PBR属于其 `references/pbr/framework.md` 章节，不单独设技能。该入口0.2.0已建立原生生图优先硬规则与完整规范：各图层/复杂遮罩首先原生生图，实际受阻才回退Kie等，简单渐变/数学依赖遮罩可用Blender。插件与CLI执行层遵守其内容来源约束。赤陶v008基本验收案例属于材质技能，不计入下方六项candidate领域方法，也不恢复旧退役配方。
 
 ## 方法登记
 

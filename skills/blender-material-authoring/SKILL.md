@@ -2,7 +2,7 @@
 name: blender-material-authoring
 description: 制作、修改并验证 Blender 材质、着色节点和贴图，组织参考、表面分层、映射、色彩与交付；PBR 是本技能章节，不替代建模、灯光构图或资产编目。
 metadata:
-  version: "0.2.1"
+  version: "0.2.0"
 ---
 
 # Blender 材质制作
@@ -17,7 +17,7 @@ Blender 制作遮罩的例外限简单渐变或明确几何/数学输入的计�
 
 ## 插件与 CLI
 
-0.2.1正式修订把区域/UV与首轮目标区域观察前移，按依赖准备生图及有界诊断，显式判断分层宏观Normal共享意图。复制前检查live/orphan，最终质量反馈前备齐可审查封包；详见[操作章](references/pbr/plugin-cli-authoring.md)。复用已验证构建器，不把拟开发功能当现有入口；本修订尚未测得总体提速。
+0.2.0正式修订把区域/UV与首轮目标区域观察前移，按依赖准备生图及有界诊断，显式判断分层宏观Normal共享意图。复制前检查live/orphan，最终质量反馈前备齐可审查封包；详见[操作章](references/pbr/plugin-cli-authoring.md)。复用已验证构建器，不把拟开发功能当现有入口；本修订尚未测得总体提速。
 
 先按[最高指导](../blender-work-methodology/references/plugin-cli-work-units.md)评估连续工作单元，再准备完整输入与有限候选。宿主负责生图，插件消费图层/映射/节点，CLI 管身份/作业/证据；插件不假设访问原生生图会话。
 
