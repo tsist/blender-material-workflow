@@ -1,6 +1,6 @@
 # Material Workflow 0.8.0 candidate
 
-GPL-3.0-or-later Blender extension for existing static image-layer v1/v2 workflows and procedural/hybrid PBR manifest2.0 authoring. Companion CLI0.64.0 and skills0.3.0 remain candidates; material source guidance is0.6.0. Bounded build-a qualification is complete, but no public candidate release assets are announced.
+GPL-3.0-or-later Blender extension for existing static image-layer v1/v2 workflows and procedural/hybrid PBR manifest2.0 authoring. Companion CLI0.64.0 and skills0.3.0 remain candidates; material source guidance is0.7.0. Bounded build-a qualification is complete, but no public candidate release assets are announced.
 
 When a verified package is available, install with Preferences → Extensions → Install from Disk, enable it, and open View3D → Sidebar → Material Workflow. Manifest minimum is Blender5.2.0; the bounded maintainer runtime baseline is Windows / Blender5.2.1 LTS. Blender and CLI are separate installations, not bundled downloads.
 

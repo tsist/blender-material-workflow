@@ -1,6 +1,6 @@
 # Material Workflow 材质插件
 
-**本地候选：插件0.8.0、技能包0.3.0（材质指导0.6.0）、配套CLI0.64.0。** 许可证GPL-3.0-or-later。
+**本地候选：插件0.8.0、技能包0.3.0（材质指导0.7.0）、配套CLI0.64.0。** 许可证GPL-3.0-or-later。
 
 [英文说明](README.md) · [技能安装](skills/README.md) · [扩展指南](docs/EXTENSION_README.md) · [候选范围](docs/EXTENSION_README.md)
 
