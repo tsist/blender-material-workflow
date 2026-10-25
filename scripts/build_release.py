@@ -40,7 +40,9 @@ def main():
     # Runtime files are root modules only; development resources belong in the source ZIP.
     runtime = [p for p in files if p.parent == ROOT and
                (p.suffix == '.py' or p.name in {'blender_manifest.toml', 'LICENSE', 'README.md'})]
-    required = {'__init__.py', 'blender_manifest.toml', 'LICENSE', 'core.py', 'core_v2.py', 'ui.py', 'job_bridge.py'}
+    required = {'__init__.py', 'blender_manifest.toml', 'LICENSE', 'core.py', 'core_v2.py', 'ui.py', 'job_bridge.py',
+                'procedural_bake.py', 'procedural_contract.py', 'procedural_core.py',
+                'procedural_examples.py', 'procedural_mesh_maps.py', 'procedural_ui.py'}
     if not required <= {p.name for p in runtime}: raise SystemExit('Incomplete extension')
     entries = [('blender-skills-' + skills + '/' + p.relative_to(ROOT).as_posix(), p.read_bytes())
                for p in files if p.is_relative_to(ROOT / 'skills')]
@@ -53,7 +55,7 @@ def main():
     rows = [{'file': name, 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)} for name, data in sorted(payloads.items())]
     payloads['release-manifest.json'] = (json.dumps({'extension_version': version, 'skills_bundle_version': skills,
         'license': 'GPL-3.0-or-later', 'repository': 'tsist/blender-material-workflow',
-        'backend': {'repository': 'tsist/blenderctl', 'tested_version': '0.54.1', 'optional_for_local_editing': True},
+        'backend': {'repository': 'tsist/blenderctl', 'tested_version': '0.64.0', 'optional_for_local_editing': True},
         'audited_source_files': len(files), 'extension_files': len(runtime), 'artifacts': rows}, indent=2) + '\n').encode()
     payloads['SHA256SUMS.txt'] = ''.join(hashlib.sha256(data).hexdigest() + '  ' + name + '\n' for name, data in sorted(payloads.items())).encode()
     output = args.output.resolve()
