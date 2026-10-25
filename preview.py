@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
 """M1 static mesh studio. Source RNA is read only; rendering is caller owned.
 
 Requires the selected source scene/view layer/frame to be active before capture.
@@ -60,7 +59,11 @@ def build_preview(manifest, target_obj):
         bpy.data.meshes.remove(mesh)
         raise ValueError('Preview mesh contains no surface')
     # Object material overrides are preserved, including empty slots.
-    materials = [slot.material for slot in evaluated.material_slots]
+    # Evaluated IDs belong to the depsgraph. Binding those temporary Materials
+    # into a persistent mesh leaves dangling node-group interfaces when the
+    # next view rebuilds that graph. Keep the actual source ID instead.
+    materials = [slot.material.original if slot.material else None
+                 for slot in evaluated.material_slots]
     for index, material in enumerate(materials):
         mesh.materials[index] = material
     uv = manifest['target'].get('uv_layer')

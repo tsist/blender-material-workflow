@@ -1,33 +1,23 @@
 # Material Workflow
 
-Separate GitHub home for the existing Material Workflow Blender extension and its companion agent skills.
+Blender extension and companion agent skills, licensed **GPL-3.0-or-later**.
 
-**Extension 0.7.0 · Skills 0.2.0 · GPL-3.0-or-later**
+**Local candidate: Extension 0.8.0 · Skills bundle 0.3.0 (material guidance 0.6.0) · companion blenderctl 0.64.0.**
 
-[中文说明](README.zh-CN.md) · [Release](https://github.com/tsist/blender-material-workflow/releases/tag/v0.7.0) · [Companion skills](skills/README.md)
+[中文说明](README.zh-CN.md) · [Companion skills](skills/README.md) · [Extension guide](docs/EXTENSION_README.md) · [Candidate scope](docs/EXTENSION_README.md)
 
-This is a repository-management split only. Plugin runtime modules, Blender manifest and all companion skill files are byte-for-byte copies of their previously published source in `tsist/blenderctl` commit `fbb76afa5da7e8577f366738b6ca5e392e6c3853`. No material algorithms, UI behavior, CLI dependency, software version or skill guidance is changed by this split.
+This candidate adds procedural and hybrid PBR authoring to the existing static image-layer workflow. Fifteen typed signals include coordinate frames, vector warp, Noise, Wave wood, Voronoi and remapping; layered parameters control color, roughness, metalness, signed height and glass optical values. Wood accepts an explicit grain axis and three local sampling multipliers; metal weathering uses caller-selected regions and a clean zero-weathering control. Existing image-layer v1/v2 contracts remain available separately.
 
-The original [blenderctl](https://github.com/tsist/blenderctl) repository retains its existing layout and bundled material core. There is no submodule and no recursive-clone requirement. Background handoff still uses a normal blenderctl checkout containing `tools/blenderctl/cli.py`. This repository alone is not a CLI backend root.
+Keep editable author materials and texture-only reconstructions. Per-channel Cycles baking writes sRGB BaseColor, Non-Color data, encoded IOR, signed float Height and real tangent Normal; disk reload, source/dependency identity, target protection, managed-edit checks and save/reopen verification are part of the workflow. Existing UVs are required. No automatic UV, volume absorption, true displacement or arbitrary node-graph takeover is claimed. Cycles/Eevee and glass differences require separate observation.
 
-## Downloads
+Bounded file-stage production and review are complete: 14 material targets and 126 required 2K maps passed independent full-pixel disk checks and reconstruction. The maintainer actually viewed 30 final author/reconstructed images across both engines/relighting plus 12 local supplements, 42 in total, including the actual oil upper shoulder and lid edge. DeepSeek completed creation/correction, 2K export, reconstruction and finite final-image review with maintainer intervention in wood mixing, oil layers and glass-thickness diagnosis. This was assisted reuse, not an unassisted blind test or fully unattended workflow. Softer 2K pores/fine lines, Eevee glass approximations and conditional visual findings remain.
 
-- `material-workflow-0.7.0.zip`: existing Blender extension; Preferences → Extensions → Install from Disk.
-- `blender-skills-0.2.0.zip`: the unchanged complete four-skill suite, keeping all sibling references. Extract and run `python install_skills.py --destination '<actual-absolute-skill-directory>'`; existing skills are refused before copying.
-- `material-workflow-0.7.0-source.zip`: independent repository source and packaging tools.
-- Release manifest and SHA-256 checksums.
+Extracted build-a passed 15 technical stages, including 73 host cases (two optional Pillow skips), fresh standalone contract/core/bake/optics cases and independent reopen, the public CLI's 128×128/nine-map surface round trip with full-pixel maximum error 0, and isolated installation, legacy load/apply, surface save and independent reopen of the 25-member extension. This qualifies tested build-a code/bytes, not later archives: final document updates still require repacking and final checks. Private cases and audits are not bundled; `tests/procedural_runner.py` creates its own reproducible fixtures. The versions remain candidates without public release assets; no cross-machine, arbitrary-prop or final aesthetic certification is claimed.
 
-The extension ZIP is byte-identical to the previously published blenderctl release asset. The skill source files are unchanged; their complete ZIP is reproduced from the existing companion build. GitHub documentation and separate release tooling describe repository ownership only. Source/skill file hashes are verified against the original Git commit, in addition to normal package audits and repeated builds.
+## Use the candidate
 
-Manifest minimum Blender 5.2.0; historical runtime baseline Windows / Blender 5.2.1 LTS build `9e2066aef7ef`. Existing UVs and static image files are required. No new runtime feature or compatibility guarantee is introduced. See [existing workflow documentation](https://github.com/tsist/blenderctl/blob/main/docs/MATERIAL_WORKFLOW.md).
+No 0.8.0/0.3.0 candidate download asset is published by this document. Review this source checkout and the validation guide before packaging or installing. A packaged extension uses Blender Preferences → Extensions → Install from Disk. Companion skills stay together as sibling folders; their installer refuses existing same-named skills. See the [skill guide](skills/README.md).
 
-## Repository checks
+The separate [blenderctl source repository](https://github.com/tsist/blenderctl) remains the normal backend checkout; there is no submodule or recursive-clone requirement. Set `BLENDERCTL_ROOT` to its unpacked source containing `tools/blenderctl/cli.py`. This extension repository alone is not a CLI backend root. Blender and CLI are installed separately; neither is downloaded by the extension.
 
-```powershell
-python -m unittest discover -s tests -p "test_*.py" -v
-python scripts/check_skills.py
-python scripts/build_release.py --output dist
-python scripts/build_release.py --output dist --verify
-```
-
-The earlier submodule-based 0.7.1 proposal was withdrawn after clarification. Current repositories preserve their original execution and dependency structure.
+The historical repository-only 0.7.0 split is recorded in [CHANGELOG](CHANGELOG.md). Its byte-identical-copy statement applies to that historical split, not this candidate's new behavior.
