@@ -18,6 +18,8 @@ COMMON = frozenset(('NodeFrame', 'NodeReroute', 'NodeGroupInput', 'NodeGroupOutp
     'ShaderNodeUVMap', 'ShaderNodeMapping', 'ShaderNodeTexImage',
     'ShaderNodeNormalMap', 'ShaderNodeBump'))
 EEVEE_ONLY = frozenset(('ShaderNodeShaderToRGB',))
+MATERIAL_LIGHTING = frozenset(('ShaderNodeLightInfo', 'ShaderNodeLightEvaluation',
+    'ShaderNodeLightAccumulation', 'ShaderNodeShadowRaycast'))
 
 def _engine(engine):
     if engine not in ENGINES:
@@ -40,9 +42,14 @@ def validate_tree(tree, engine, *, effect=False, _stack=(), _budget=None):
     found = set()
     for node in tree.nodes:
         kind = node.bl_idname
-        if kind in EEVEE_ONLY and engine != 'BLENDER_EEVEE':
-            raise WorkflowError('unsupported_node', 'Shader to RGB requires Eevee: '+tree.name+'/'+node.name)
-        if kind not in COMMON | (EEVEE_ONLY if engine == 'BLENDER_EEVEE' else frozenset()):
+        light_space = kind == 'ShaderNodeVectorTransform' and 'LIGHT' in (node.convert_from, node.convert_to)
+        light_attribute = kind == 'ShaderNodeAttribute' and node.attribute_type == 'LIGHT'
+        material_lighting = kind in MATERIAL_LIGHTING or light_space or light_attribute
+        eevee_only = kind in EEVEE_ONLY or material_lighting
+        if eevee_only and engine != 'BLENDER_EEVEE':
+            requirement = 'Material lighting requires Eevee: ' if material_lighting else 'Shader to RGB requires Eevee: '
+            raise WorkflowError('unsupported_node', requirement+tree.name+'/'+node.name)
+        if kind not in COMMON and not eevee_only:
             raise WorkflowError('unsupported_node', 'Node is outside the verified static surface subset: '+tree.name+'/'+node.name+' ('+kind+')')
         if kind == 'ShaderNodeTexImage' and effect:
             raise WorkflowError('unsupported_group', 'Effect texture resources must be managed layer channels')

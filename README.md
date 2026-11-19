@@ -2,9 +2,11 @@
 
 Separate GitHub home for the existing Material Workflow Blender extension and its companion agent skills.
 
-**Extension 0.7.0 · Skills 0.2.0 · GPL-3.0-or-later**
+**Extension 0.7.2 · Skills 0.2.0 · GPL-3.0-or-later**
 
-[中文说明](README.zh-CN.md) · [Release](https://github.com/tsist/blender-material-workflow/releases/tag/v0.7.0) · [Companion skills](skills/README.md)
+[中文说明](README.zh-CN.md) · [Release](https://github.com/tsist/blender-material-workflow/releases/tag/v0.7.2) · [Companion skills](skills/README.md)
+
+Blender 5.3.0 adds EEVEE material lighting nodes. Version 0.7.2 recognizes their static surface variants and validates their engine requirement. Blender 5.2.1 retains the existing node contract. Fresh installation and real material previews were tested on Windows.
 
 This is a repository-management split only. Plugin runtime modules, Blender manifest and all companion skill files are byte-for-byte copies of their previously published source in `tsist/blenderctl` commit `fbb76afa5da7e8577f366738b6ca5e392e6c3853`. No material algorithms, UI behavior, CLI dependency, software version or skill guidance is changed by this split.
 
@@ -12,9 +14,9 @@ The original [blenderctl](https://github.com/tsist/blenderctl) repository retain
 
 ## Downloads
 
-- `material-workflow-0.7.0.zip`: existing Blender extension; Preferences → Extensions → Install from Disk.
+- `material-workflow-0.7.2.zip`: Blender extension installed from Preferences → Extensions → Install from Disk.
 - `blender-skills-0.2.0.zip`: the unchanged complete four-skill suite, keeping all sibling references. Extract and run `python install_skills.py --destination '<actual-absolute-skill-directory>'`; existing skills are refused before copying.
-- `material-workflow-0.7.0-source.zip`: independent repository source and packaging tools.
+- `material-workflow-0.7.2-source.zip`: independent repository source and packaging tools.
 - Release manifest and SHA-256 checksums.
 
 The extension ZIP is byte-identical to the previously published blenderctl release asset. The skill source files are unchanged; their complete ZIP is reproduced from the existing companion build. GitHub documentation and separate release tooling describe repository ownership only. Source/skill file hashes are verified against the original Git commit, in addition to normal package audits and repeated builds.
