@@ -1,0 +1,58 @@
+--- a/tools/material_workflow_addon/procedural_bake.py
++++ b/tools/material_workflow_addon/procedural_bake.py
+@@ -810,6 +810,55 @@
+                               if channel=='ior' else {'kind':'signed_float','zero':0.,'distance':bump_meta['distance']}
+                               if channel=='height' else {'kind':'srgb_color'} if channel=='base_color' else {'kind':'unit_data'}))
+                 report['channels'][channel] = entry
++            # R16 lab only: tap the actual connected pre/post remap, without
++            # editing the production material or listing new rebuild channels.
++            control = nodes['MWP Controls']
++            control.node_tree = control.node_tree.copy()
++            probe_tree = control.node_tree
++            try:
++                remap = next(n for n in probe_tree.nodes if n.get('mwp_node') == 'coating_loss/remap')
++                incoming = remap.inputs['Value'].links[0].from_socket
++                group_out = next(n for n in probe_tree.nodes if n.type == 'GROUP_OUTPUT' and n.is_active_output)
++                combine = probe_tree.nodes.new('ShaderNodeCombineXYZ')
++                probe_tree.links.new(incoming, combine.inputs['X'])
++                probe_tree.links.new(remap.outputs['Result'], combine.inputs['Y'])
++                probe_tree.links.new(group_out.inputs['roughness'].links[0].from_socket, combine.inputs['Z'])
++                probe_tree.interface.new_socket(name='R16 Probe', in_out='OUTPUT', socket_type='NodeSocketVector')
++                probe_tree.links.new(combine.outputs[0], group_out.inputs['R16 Probe'])
++                image = bpy.data.images.new('MWP_R16_'+run_id, width=config['size'], height=config['size'],
++                                             alpha=True, float_buffer=True)
++                pending_images.append(image)
++                image.colorspace_settings.name = 'Non-Color'
++                image.alpha_mode = 'STRAIGHT'
++                image.generated_color = (0,0,0,0)
++                image_node.image = image
++                for link in list(emit.inputs['Color'].links):links.remove(link)
++                for link in list(target_output.inputs['Surface'].links):links.remove(link)
++                links.new(control.outputs['R16 Probe'], emit.inputs['Color'])
++                links.new(emit.outputs[0], target_output.inputs['Surface'])
++                result = bpy.ops.object.bake(type='EMIT', target='IMAGE_TEXTURES', margin=0,
++                    use_clear=True, uv_layer=uv_layer)
++                if result != {'FINISHED'}:
++                    _fail('bake_operator', 'R16 probe bake did not finish')
++                path = run_dir/'r16-probe.exr'
++                scene.view_settings.view_transform = 'Raw'
++                scene.render.image_settings.file_format = 'OPEN_EXR'
++                scene.render.image_settings.color_mode = 'RGBA'
++                scene.render.image_settings.color_depth = '32'
++                image.save_render(str(path), scene=scene)
++                uvs = duplicate.data.uv_layers[uv_layer].uv
++                duplicate.data.calc_loop_triangles()
++                _write_report(run_dir/'r16-surface.json',{
++                    'channels': ['remap_input','coating_loss','roughness','coverage'],
++                    'incoming_node': incoming.node.get('mwp_node'),
++                    'vertices': [list(duplicate.matrix_world @ v.co) for v in duplicate.data.vertices],
++                    'triangles': [{'face': tri.polygon_index, 'vertices': list(tri.vertices),
++                       'uv': [list(uvs[i].vector) for i in tri.loops]} for tri in duplicate.data.loop_triangles],
++                    'exact_uv': uv_layer, 'probe_margin': 0,
++                })
++            finally:
++                control.node_tree = material.node_tree.nodes['MWP Controls'].node_tree
++                bpy.data.node_groups.remove(probe_tree)
+         report['status']='complete'
+         report['delivery'].update(complete=True,disk_decode_verified=True)
+     except Exception as error:

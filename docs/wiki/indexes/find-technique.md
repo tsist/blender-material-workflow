@@ -10,6 +10,10 @@
 
 - [MW-013 · 验证辅助遮罩的实际位深](../techniques/013-verify-helper-mask-depth.md) · 独立复验
 
+## 喷漆金属 / 遮罩过渡与接缝归因 / Coating Loss、Roughness
+
+- [MW-014 · 定位窄阈值造成的局部遮罩跳变](../techniques/014-trace-narrow-mask-remap.md) · 单件复现
+
 ## 喷漆钢 / 掉漆和锈蚀 / Metallic、Roughness
 
 - [MW-003 · 分离掉漆、露钢和锈蚀](../techniques/003-chip-and-rust.md) · 单件复现

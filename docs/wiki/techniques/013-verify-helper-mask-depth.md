@@ -26,4 +26,4 @@
 
 ## 证据
 
-[双工具箱原生对照、命令和截图](../labs/helper-mask-depth-native.md)。[PNG 规范](https://www.w3.org/TR/png-3/)定义容器位深；[Blender PNG 支持](https://docs.blender.org/manual/en/5.1/files/media/image_formats.html)与[Adobe 纹理集设置](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/interface/texture-set/texture-set-settings)分别说明格式能力与原始数据通道。
+[双工具箱原生对照、命令和截图](../labs/helper-mask-depth-native.md)。[PNG 规范](https://www.w3.org/TR/png-3/)定义容器位深；[Blender PNG 支持](https://docs.blender.org/manual/en/5.1/files/media/image_formats.html)与[Adobe 纹理集设置](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/interface/texture-set/texture-set-settings)分别说明格式能力与原始数据通道。 [下一步：追踪真实的窄阈值与接缝](014-trace-narrow-mask-remap.md)。

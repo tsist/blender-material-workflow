@@ -38,6 +38,10 @@
 
 - [MW-004 · 按几何位置分配旧化信号](../techniques/004-mesh-map-roles.md) · 来源已核
 
+## 磨损边界局部跳变，整张图统计却正常
+
+- [MW-014 · 定位窄阈值造成的局部遮罩跳变](../techniques/014-trace-narrow-mask-remap.md) · 单件复现
+
 ## 程序导出拒绝 AO 通道
 
 - [MW-011 · 把 AO 辅助遮罩与交付 AO 分开](../techniques/011-ao-routing.md) · 单件复现

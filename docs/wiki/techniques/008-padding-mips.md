@@ -26,4 +26,4 @@
 
 ## 证据
 
-[实跑算例](../labs/texture-contract.md)；[Blender 5.3 Bake Margin](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html)；[Painter Padding](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/technical-support/workflow-issues/export-issues/texture-dilation-or-padding)。
+[实跑算例](../labs/texture-contract.md)；[Blender 5.3 Bake Margin](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html)；[Painter Padding](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/technical-support/workflow-issues/export-issues/texture-dilation-or-padding)。 [同一工具箱实际切口与零扩边负对照](../labs/corner-seam-native.md)。
