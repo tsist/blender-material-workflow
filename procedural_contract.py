@@ -306,6 +306,11 @@ LAYER_SCHEMA = obj(
         "enabled": {"type": "boolean", "default": True},
         "opacity": num(0, 1, 1),
         "mask": {"anyOf": [deepcopy(ID), {"type": "null"}], "default": None},
+        # No default: old recipes and stored control paths stay unchanged.
+        "affects": {
+            "type": "array", "items": {"enum": list(MATERIAL_CHANNELS)},
+            "minItems": 1, "maxItems": len(MATERIAL_CHANNELS), "uniqueItems": True,
+        },
         "channels": deepcopy(LAYER_CHANNELS_SCHEMA),
         "values": deepcopy(LAYER_VALUES_SCHEMA),
     },
@@ -673,6 +678,12 @@ def _check_images(signals):
         known_hashes[path_key] = digest
 
 
+def layer_channels(layer):
+    """Return participating channels in stable socket order."""
+    explicit = layer.get("affects")
+    return tuple(c for c in MATERIAL_CHANNELS if explicit is None or c in explicit)
+
+
 def _check_layers(layers, signal_types):
     seen = set()
     for index, layer in enumerate(layers):
@@ -682,6 +693,17 @@ def _check_layers(layers, signal_types):
                 "duplicate stable ID",
             )
         seen.add(layer["id"])
+
+        if "affects" in layer:
+            path = f"manifest.layers[{index}].affects"
+            if index == 0:
+                _fail(path, "base layer must participate in all channels; omit affects")
+            if len(set(layer["affects"])) != len(layer["affects"]):
+                _fail(path, "duplicate channels")
+            inactive = set(layer["channels"]) - set(layer["affects"])
+            if inactive:
+                _fail(path, "signal bindings outside affects: " + ", ".join(sorted(inactive)))
+            layer["affects"] = list(layer_channels(layer))
 
         for channel, signal_id in layer["channels"].items():
             if signal_id not in signal_types:
