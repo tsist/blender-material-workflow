@@ -18,12 +18,12 @@
 
 ## 通过条件
 
-程序导出可同时声明 Normal 和 Height，直接声明 AO 则拒绝。投射试样中原底色保持不变、AO 未反相成 cavity；输出灰度在见光平面比遮挡槽高。投射试样未复验。
+程序导出可同时声明 Normal 和 Height，直接声明 AO 则拒绝。投射验收：先确认开阔平面和同一高模上的凹槽都命中，再比较 AO 灰度；平面比凹槽亮，Base Color 不变。按[原生试样协议](../labs/texture-contract.md#原生-ao-投射验收)保留局部命中证据。
 
 ## 失败处理
 
-程序导出拒绝 AO：换正确路线，不重命名其他图顶替。模型之间的接触阴影不是当前仅采源表面的局部 AO，另设参考检验。
+程序导出拒绝 AO：换正确路线，不重命名其他图顶替。白色 AO 既可能是无遮挡，也可能是投射漏射后的中性填充。总命中率不能确认某个凹槽命中；在该区域核对命中图。排查射线距离时先记录 Cage 模式：0.9.2 的非零 Extrusion 会启用 Cage；Blender 的 Max Ray Distance 属于无 Cage 的设置。跨物件接触阴影另设试样。
 
 ## 证据
 
-[合同探针](../labs/texture-contract.md)；[0.9.2 投射](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L195)；[Khronos AO 语义](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials)。
+[合同探针](../labs/texture-contract.md)；[0.9.2 投射](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L195)；[漏射填充与汇总](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L234)；[Blender 5.3 投射设置](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html#selected-to-active)；[Khronos AO 语义](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials)。
