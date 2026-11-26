@@ -22,8 +22,8 @@
 
 ## 失败处理
 
-普通输入图变化应触发受管冲突；不要关闭图快照核验。将局部数据接入专用提交路径。
+普通输入图变化应触发受管冲突；不要关闭图快照核验。把局部数据接入专用提交路径。保存 .blend 和提交图像分开验；提交后绑定新摘要，保持其他普通受管图的完整性检查。
 
 ## 证据
 
-已验证预制加减图在两件工具箱上保存、冷开、改参和导出。Blender 画笔录入与保存待验。[0.9.2 图像快照](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/procedural_core.py#L52)。
+已验证预制加减图在两件工具箱上保存、冷开、改参和导出。Blender 画笔录入与保存待验，参照[原生图像保存说明](https://docs.blender.org/manual/en/5.3/sculpt_paint/texture_paint/introduction.html)和[画笔提交规格](../research-handoff.md#画笔提交的最小规格)。[0.9.2 图像快照](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/procedural_core.py#L52)。

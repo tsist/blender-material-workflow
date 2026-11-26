@@ -1,8 +1,8 @@
 # 分离掉漆、露钢和锈蚀
 
-<!-- wiki-index: {"id":"MW-003","title":"分离掉漆、露钢和锈蚀","stage":"weathering","material":"喷漆钢","effect":"掉漆和锈蚀","channel":"Metallic、Roughness","symptom":"每处掉漆都长出同样的锈","evidence":"single","applies":"0.9.2 配方基线；新配方未复验"} -->
+<!-- wiki-index: {"id":"MW-003","title":"分离掉漆、露钢和锈蚀","stage":"weathering","material":"喷漆钢","effect":"掉漆和锈蚀","channel":"Metallic、Roughness","symptom":"每处掉漆都长出同样的锈","evidence":"single","applies":"Material PR 3；Blender 5.3.0 双箱"} -->
 
-适用：0.9.2 配方基线；新配方未复验。证据：单件复现（按所列范围）。
+适用：Material PR 3；Blender 5.3.0 双箱。证据：单件复现（按所列范围）。
 
 ## 任务
 
@@ -14,11 +14,11 @@
 
 ## 执行
 
-查基线的掉漆与氧化信号。分开漆、底漆、露钢；在露钢与滞湿条件上派生氧化，再从可积水边沿重力加水迹。
+用两段阈值分出掉漆与露钢，再令氧化 = 露钢 × 潮湿 × 强度。水迹用独立强度和明确坐标系。[消融和命令](../labs/weathering-native.md)。
 
 ## 通过条件
 
-新鲜伤口可露钢但无锈；完好面保持漆；水迹向下；氧化层不照用裸钢金属度。切换第二形体验证位置。
+所有覆盖像素满足氧化 ≤ 露钢 ≤ 掉漆，存在露钢少锈和仅底漆区。分别关闭氧化、水迹，非目标遮罩 SHA 不变。仿重力另验坐标；物体局部方向不等于世界方向。
 
 ## 失败处理
 
@@ -26,4 +26,4 @@
 
 ## 证据
 
-基线合同复现同掩膜；新配方未复验。[对照命令](../labs/mask-baseline.md)；[剥漆教程](https://www.adobe.com/us/learn/substance-3d-painter/web/substance-painter-peeled-paint-effect)。
+基线合同复现同掩膜；新版做法通过两箱原生消融、局部轴旋转和 512² 出图。此证据不代表独立质量复验或智能材质定稿。[对照命令](../labs/mask-baseline.md)；[剥漆教程](https://www.adobe.com/us/learn/substance-3d-painter/web/substance-painter-peeled-paint-effect)。

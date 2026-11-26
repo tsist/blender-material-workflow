@@ -5,6 +5,7 @@
 - [做资产](indexes/make-assets.md)：按烘焙、图层和遮罩、做旧、导出推进。
 - [查工艺](indexes/find-technique.md)：按材料、效果和通道定位。
 - [排故](indexes/troubleshoot.md)：按看到的症状定位。
+- [研究阶段交接](research-handoff.md)：实证范围、研发缺口和各项验收。
 - [原始资料与取舍](sources/comparison.md)：商业工具、开源实现、教程和许可。
 
 ## 如何读证据
