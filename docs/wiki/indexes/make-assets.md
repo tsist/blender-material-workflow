@@ -5,6 +5,8 @@
 ## 01 · 烘焙
 
 - [MW-004 · 按几何位置分配旧化信号](../techniques/004-mesh-map-roles.md) · 来源已核
+- [MW-007 · 烘焙前查目标槽 UV](../techniques/007-uv-preflight.md) · 单件复现
+- [MW-008 · 用缩图定位 UV 边缘渗色](../techniques/008-padding-mips.md) · 单件复现
 
 ## 02 · 图层和遮罩
 
@@ -19,3 +21,6 @@
 ## 04 · 导出
 
 - [MW-005 · 从贴图重建时保持颜色空间与切线](../techniques/005-rebuild-pbr.md) · 来源已核
+- [MW-009 · 区分镜像切线与绿色轴错误](../techniques/009-mirror-tangents.md) · 单件复现
+- [MW-010 · 搬运贴图后核对摘要再重建](../techniques/010-relocate-bake.md) · 单件复现
+- [MW-011 · 把 AO 辅助遮罩与交付 AO 分开](../techniques/011-ao-routing.md) · 单件复现
