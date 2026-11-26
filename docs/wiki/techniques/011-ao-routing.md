@@ -10,7 +10,7 @@
 
 ## 输入
 
-定义目标槽、接收模型和 UV；投射另给相互独立的源高模、射线距离和 AO 距离。
+定义目标槽、接收模型和 UV；投射另给相互独立的源高模、射线距离和 AO 距离。用单槽接收体：Principled 直接连到适用全部引擎的唯一活动输出，Principled 的 Normal 不接线。
 
 ## 执行
 
@@ -22,8 +22,8 @@
 
 ## 失败处理
 
-程序导出拒绝 AO：换正确路线，不重命名其他图顶替。白色 AO 既可能是无遮挡，也可能是投射漏射后的中性填充。总命中率不能确认某个凹槽命中；在该区域核对命中图。排查射线距离时先记录 Cage 模式：0.9.2 的非零 Extrusion 会启用 Cage；Blender 的 Max Ray Distance 属于无 Cage 的设置。跨物件接触阴影另设试样。
+投射绑定报 Normal 已连接：不要断开正式材质的 Bump。用单独接收体跑投射试样；原材质的法线组合另验。程序导出拒绝 AO：换正确路线，不重命名其他图顶替。白色 AO 既可能是无遮挡，也可能是投射漏射后的中性填充。总命中率不能确认某个凹槽命中；在该区域核对命中图。排查射线距离时先记录 Cage 模式：0.9.2 的非零 Extrusion 会启用 Cage；Blender 的 Max Ray Distance 属于无 Cage 的设置。跨物件接触阴影另设试样。
 
 ## 证据
 
-[合同探针](../labs/texture-contract.md)；[0.9.2 投射](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L195)；[漏射填充与汇总](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L234)；[Blender 5.3 投射设置](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html#selected-to-active)；[Khronos AO 语义](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials)。
+[合同探针](../labs/texture-contract.md)；[0.9.2 投射](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L195)；[漏射填充与汇总](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_bake.py#L234)；[Blender 5.3 投射设置](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html#selected-to-active)；[材质槽前置检查](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/projection_material.py#L141)；[Khronos AO 语义](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials)。
