@@ -2,6 +2,10 @@
 
 自动生成。编辑工艺页，不手改此页。
 
+## 16 位导出后遮罩仍有阶梯或跳变
+
+- [MW-013 · 验证辅助遮罩的实际位深](../techniques/013-verify-helper-mask-depth.md) · 独立复验
+
 ## 原尺寸正常，远处或缩图出现接缝
 
 - [MW-008 · 用缩图定位 UV 边缘渗色](../techniques/008-padding-mips.md) · 单件复现

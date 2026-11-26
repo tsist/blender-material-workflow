@@ -8,7 +8,8 @@
 | 程序遮罩＋局部修正 | [MW-002](techniques/002-local-mask.md)：两张加减图与程序分别保存、改参、生效、重建 | 开发 Blender 画笔界面和显式提交；编辑、擦除、撤回、错 UV、冷开及再导出逐项实测 |
 | 掉漆、露钢、锈和水迹 | [MW-003](techniques/003-chip-and-rust.md)：双形体、两项消融、方向负例与 512² 重建 | 单独控制接触、划痕、灰尘、锈蚀与水迹；冻结目标镜头的视觉标尺和真实重力约定 |
 | Linux 和贴图交付 | [MW-006](techniques/006-linux-procedural.md)、[MW-010](techniques/010-relocate-bake.md)：隔离 CLI、摘要、重定位冷开已验证 | 上游 CLI 兼容候选、并发和资源边界；不把原型当生产安装 |
-| 辅助遮罩分辨率 | [MW-012](techniques/012-match-mesh-map-resolution.md)：固定 2K 最终导出，双箱比较两档辅助图 | 按目标镜头选择尺寸；独立测试抗锯齿、位深和 UV 边距，不由默认值自动升级全部资源 |
+| 辅助遮罩分辨率 | [MW-012](techniques/012-match-mesh-map-resolution.md)：固定 2K 最终导出，双箱比较两档辅助图 | 按目标镜头选择尺寸；独立测试抗锯齿、位深与 UV 边距的交互，不由默认值自动升级全部资源 |
+| 辅助遮罩位深 | [MW-013](techniques/013-verify-helper-mask-depth.md)：双箱同参数重烘、逐通道位深与数值复验 | 保留 8 位默认；以目标镜头和下游结果决定是否启用逐图升级 |
 | 辅助图与投射 AO | [MW-004](techniques/004-mesh-map-roles.md)、[MW-007](techniques/007-uv-preflight.md)、[MW-011](techniques/011-ao-routing.md)：整件与目标槽分流、程序 Cavity 原生通过、投射接收体测试已定义 | 验证 Linux 投射入口；同一接收面保留命中证据；不能把 Cavity 或白值冒充投射 AO |
 | 智能材质和素材库 | [来源与取舍](sources/comparison.md) 已分代码许可与素材许可；试样级输出可复跑 | 每件验收来源、再分发许可、贴图和 UV 依赖；达到独立复验和视觉标准再入库 |
 

@@ -8,6 +8,7 @@
 - [MW-007 · 烘焙前查目标槽 UV](../techniques/007-uv-preflight.md) · 单件复现
 - [MW-008 · 用缩图定位 UV 边缘渗色](../techniques/008-padding-mips.md) · 单件复现
 - [MW-012 · 按镜头检验辅助图分辨率](../techniques/012-match-mesh-map-resolution.md) · 独立复验
+- [MW-013 · 验证辅助遮罩的实际位深](../techniques/013-verify-helper-mask-depth.md) · 独立复验
 
 ## 02 · 图层和遮罩
 

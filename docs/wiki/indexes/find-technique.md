@@ -6,6 +6,10 @@
 
 - [MW-012 · 按镜头检验辅助图分辨率](../techniques/012-match-mesh-map-resolution.md) · 独立复验
 
+## 喷漆金属 / 层遮罩量化和阈值跳变 / Edge、Cavity、Roughness
+
+- [MW-013 · 验证辅助遮罩的实际位深](../techniques/013-verify-helper-mask-depth.md) · 独立复验
+
 ## 喷漆钢 / 掉漆和锈蚀 / Metallic、Roughness
 
 - [MW-003 · 分离掉漆、露钢和锈蚀](../techniques/003-chip-and-rust.md) · 单件复现
