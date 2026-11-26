@@ -2,6 +2,10 @@
 
 自动生成。编辑工艺页，不手改此页。
 
+## 喷漆金属 / 凸缘磨损与凹处积尘 / Edge、Cavity、PBR
+
+- [MW-012 · 按镜头检验辅助图分辨率](../techniques/012-match-mesh-map-resolution.md) · 独立复验
+
 ## 喷漆钢 / 掉漆和锈蚀 / Metallic、Roughness
 
 - [MW-003 · 分离掉漆、露钢和锈蚀](../techniques/003-chip-and-rust.md) · 单件复现

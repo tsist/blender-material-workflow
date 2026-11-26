@@ -10,6 +10,10 @@
 
 - [MW-009 · 区分镜像切线与绿色轴错误](../techniques/009-mirror-tangents.md) · 单件复现
 
+## 导出 2K 后边缘遮罩仍显粗糙
+
+- [MW-012 · 按镜头检验辅助图分辨率](../techniques/012-match-mesh-map-resolution.md) · 独立复验
+
 ## 抛光把底色改灰或金属度下降
 
 - [MW-001 · 把手只改粗糙度](../techniques/001-grip-roughness.md) · 单件复现
