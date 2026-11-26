@@ -412,7 +412,7 @@ class Builder:
 
     def build(self):
         import bpy
-        from .procedural_contract import signal_order
+        from .procedural_contract import layer_channels, signal_order
         lookup = {signal['id']: (i, signal) for i, signal in enumerate(self.spec['signals'])}
         for identity in signal_order(self.spec):
             # The contract returns IDs; accept normalized records for discovery helpers.
@@ -425,7 +425,7 @@ class Builder:
             if not layer['enabled']:
                 continue
             channels = {}
-            for channel in CHANNEL_SOCKETS:
+            for channel in layer_channels(layer):
                 if channel in layer['channels']:
                     channels[channel] = self.signals[layer['channels'][channel]]
                 else:
@@ -436,7 +436,7 @@ class Builder:
                 factor = self.control('L/' + layer['id'] + '/opacity', ['layers', index, 'opacity'])
                 if layer['mask']:
                     factor = self.math('MULTIPLY', factor, self.signals[layer['mask']], layer['id'] + '/mask', frame, True)
-                for channel in CHANNEL_SOCKETS:
+                for channel in channels:
                     final[channel] = self.mix(factor, final[channel], channels[channel], channel == 'base_color', layer['id'] + '/' + channel, frame)
         for channel, socket in CHANNEL_SOCKETS.items():
             out = self.tree.interface.new_socket(name=channel, in_out='OUTPUT', socket_type='NodeSocketColor' if channel == 'base_color' else 'NodeSocketFloat')
@@ -476,6 +476,31 @@ def _target(manifest):
     return obj
 
 
+def _merge_live_controls(incoming, baseline, live, controls):
+    """Preserve live edits or fail before any graph/binding changes."""
+    from .procedural_contract import layer_channels, normalize_manifest
+    manifest = copy.deepcopy(incoming)
+    for name, path in controls.items():
+        base_value, live_value = _get_path(baseline, path), _get_path(live, path)
+        if _same_control(live_value, base_value):
+            continue
+        try:
+            requested = _get_path(manifest, path)
+            # Reordering/removing a signal or layer must not transplant a manual edit.
+            if len(path) > 2 and path[0] in ('signals', 'layers') and manifest[path[0]][path[1]]['id'] != baseline[path[0]][path[1]]['id']:
+                raise KeyError(name)
+        except (KeyError, IndexError):
+            raise WorkflowError('managed_conflict', 'Removing or reordering edited control: ' + name)
+        if len(path) == 4 and path[0] == 'layers' and path[2] == 'values':
+            layer = manifest['layers'][path[1]]
+            if 'affects' in layer and (path[3] not in layer_channels(layer) or path[3] in layer['channels']):
+                raise WorkflowError('managed_conflict', 'Removing edited layer channel control: ' + name)
+        if not _same_control(requested, base_value) and not _same_control(requested, live_value):
+            raise WorkflowError('managed_conflict', 'Manual parameter overlaps incoming recipe: ' + name)
+        _set_path(manifest, path, live_value)
+    return normalize_manifest(manifest)
+
+
 def apply_material(manifest, resource_paths=None, work_dir=None):
     import bpy
     from .procedural_contract import normalize_manifest
@@ -500,21 +525,7 @@ def apply_material(manifest, resource_paths=None, work_dir=None):
         baseline = json.loads(old[MANIFEST])
         if baseline['target'] != manifest['target']:
             raise WorkflowError('managed_conflict', 'Binding migration requires a new material ID')
-        for name, path in json.loads(old['mwp_controls']).items():
-            base_value, live_value = _get_path(baseline, path), _get_path(live, path)
-            if _same_control(live_value, base_value):
-                continue
-            try:
-                incoming = _get_path(manifest, path)
-                # Reordering/removing a signal or layer must not transplant a manual edit.
-                if len(path) > 2 and path[0] in ('signals', 'layers') and manifest[path[0]][path[1]]['id'] != baseline[path[0]][path[1]]['id']:
-                    raise KeyError(name)
-            except (KeyError, IndexError):
-                raise WorkflowError('managed_conflict', 'Removing or reordering edited control: ' + name)
-            if not _same_control(incoming, base_value) and not _same_control(incoming, live_value):
-                raise WorkflowError('managed_conflict', 'Manual parameter overlaps incoming recipe: ' + name)
-            _set_path(manifest, path, live_value)
-        manifest = normalize_manifest(manifest)
+        manifest = _merge_live_controls(manifest, baseline, live, json.loads(old['mwp_controls']))
     requests = [{k: s[k] for k in ('id', 'type', 'parameters')} for s in manifest['signals'] if s['type'] in ('edge', 'cavity')]
     maps = {}
     map_report = None
