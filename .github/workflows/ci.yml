@@ -21,6 +21,7 @@ jobs:
       - run: python -m unittest discover -s tests -p "test_*.py" -v
       - run: python scripts/check_release.py
       - run: python scripts/check_skills.py
+      - run: python scripts/check_wiki.py
       - run: python scripts/build_release.py --output dist
       - run: python scripts/build_release.py --output dist --verify
       - uses: actions/upload-artifact@v4
