@@ -1,8 +1,8 @@
 # 分开保存程序遮罩与手工加减
 
-<!-- wiki-index: {"id":"MW-002","title":"分开保存程序遮罩与手工加减","stage":"mask","material":"通用","effect":"遮罩修正","channel":"Mask","symptom":"重算覆盖手工笔迹","evidence":"source","applies":"0.9.2 源码；独立算例"} -->
+<!-- wiki-index: {"id":"MW-002","title":"分开保存程序遮罩与手工加减","stage":"mask","material":"通用","effect":"遮罩修正","channel":"Mask","symptom":"重算覆盖手工笔迹","evidence":"single","applies":"Material PR 3；Blender 5.3.0"} -->
 
-适用：0.9.2 源码；独立算例。证据：来源已核。
+适用：Material PR 3；Blender 5.3.0。证据：单件复现级，覆盖同一环境两种箱体。
 
 ## 任务
 
@@ -14,11 +14,11 @@
 
 ## 执行
 
-运行[8×8 对照命令](../labs/mask-baseline.md)。更新程序阈值；检查加、减和无笔迹区。真实工程再做冷开、导出与纯图重建。
+用独立 Non-Color 加图 A 和减图 E 组合 `max(P,A) × (1-E)`。冷开后只改程序权重 P，再导出及重建；步骤见[双工具箱原生验证](../labs/toolbox-native.md)。
 
 ## 通过条件
 
-算例：16/64 由程序变化，4/4 手工点保持；覆盖式反例丢 4/4。真实工程独立验加、减、重开、改参及导出。
+加区保留增强、减区保留擦除、无笔迹区跟随程序。独立导出与原图一致；只改 Roughness 时 Base Color 和 Metallic 保持同一 SHA。
 
 ## 失败处理
 
@@ -26,4 +26,4 @@
 
 ## 证据
 
-算例已跑；Blender 画笔未复验。[0.9.2 图像快照](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/procedural_core.py#L52)。
+已验证预制加减图在两件工具箱上保存、冷开、改参和导出。Blender 画笔录入与保存待验。[0.9.2 图像快照](https://github.com/tsist/blender-material-workflow/blob/9d560ee71fa9ece6dab007f2159541823eb9c093/procedural_core.py#L52)。

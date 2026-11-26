@@ -11,7 +11,7 @@
 ## 02 · 图层和遮罩
 
 - [MW-001 · 把手只改粗糙度](../techniques/001-grip-roughness.md) · 单件复现
-- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 来源已核
+- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 单件复现
 - [MW-006 · 区分 CLI 能发现与事务能执行](../techniques/006-linux-procedural.md) · 单件复现
 
 ## 03 · 做旧

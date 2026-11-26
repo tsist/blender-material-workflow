@@ -44,4 +44,4 @@
 
 ## 重算覆盖手工笔迹
 
-- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 来源已核
+- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 单件复现

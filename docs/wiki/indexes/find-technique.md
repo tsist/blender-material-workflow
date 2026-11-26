@@ -40,7 +40,7 @@
 
 ## 通用 / 遮罩修正 / Mask
 
-- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 来源已核
+- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 单件复现
 
 ## 通用 / 镜像接缝 / Normal
 
