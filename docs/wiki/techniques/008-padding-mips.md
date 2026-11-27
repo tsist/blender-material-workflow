@@ -29,3 +29,5 @@
 [实跑算例](../labs/texture-contract.md)；[Blender 5.3 Bake Margin](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html)；[Painter Padding](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/technical-support/workflow-issues/export-issues/texture-dilation-or-padding)。 [同一工具箱实际切口与零扩边负对照](../labs/corner-seam-native.md)。
 
 [原生七档扩边、同岛参照和正反图](../labs/uv-padding-native.md)。
+
+[实际 Cycles 近景／整物换图对照](../labs/uv-padding-cycles-visual.md)：此缝在原生 2K 下两档 Extend 一样；只有显式低分辨率输入时，较宽的扩边才明显帮助近景。
