@@ -1,8 +1,8 @@
 # 用缩图定位 UV 边缘渗色
 
-<!-- wiki-index: {"id":"MW-008","title":"用缩图定位 UV 边缘渗色","stage":"bake","material":"通用","effect":"填充边距","channel":"Base Color、Roughness","symptom":"原尺寸正常，远处或缩图出现接缝","evidence":"single","applies":"线性采样算例；目标渲染器未复验"} -->
+<!-- wiki-index: {"id":"MW-008","title":"用缩图定位 UV 边缘渗色","stage":"bake","material":"通用","effect":"填充边距","channel":"Base Color、Roughness","symptom":"原尺寸正常，远处或缩图出现接缝","evidence":"single","applies":"线性算例；Blender 5.3.0 单件原生扩边与 CPU 缩图"} -->
 
-适用：线性采样算例；目标渲染器未复验。证据：单件复现（按所列范围）。
+适用：线性算例；Blender 5.3.0 单件原生扩边与 CPU 缩图。证据：单件复现（按所列范围）。
 
 ## 任务
 
@@ -14,11 +14,11 @@
 
 ## 执行
 
-对照无填充和有填充输出；在相同滤波下看原图与缩图。Blender 的 Extend 延展边缘像素；Adjacent Faces 从 UV 缝两侧相邻面取样，按输入结构对照。
+同一贴图原生烘零扩边、Extend 4/8/16 和 Adjacent Faces 4/8/16。保持原图、UV 与滤波一致，按同一条几何边取缝两侧样点，分别对照各面原值和两侧差；用排除空白和邻岛的同岛参照隔离正常低通。
 
 ## 通过条件
 
-算例的原岛值为 1：无填充时缩图边缘读 0.5，填充后读 1。真实资产用目标的缩图及掠射光通过；不采用通用固定像素数。
+算例的原岛值为 1：无填充时缩图边缘读 0.5，填充后读 1。便携箱原生 2K 粗糙度盒滤到 512 档，Extend 三档在测试点相同；256 档加宽明显有效。先找目标尺度下最小有效宽度，再用实际占屏尺寸与掠射光复核。Adjacent Faces 可缩小两面差值的变化，同时使各面更偏离原值；两个指标分开看。
 
 ## 失败处理
 
@@ -27,3 +27,5 @@
 ## 证据
 
 [实跑算例](../labs/texture-contract.md)；[Blender 5.3 Bake Margin](https://docs.blender.org/manual/en/5.3/render/cycles/baking.html)；[Painter Padding](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/technical-support/workflow-issues/export-issues/texture-dilation-or-padding)。 [同一工具箱实际切口与零扩边负对照](../labs/corner-seam-native.md)。
+
+[原生七档扩边、同岛参照和正反图](../labs/uv-padding-native.md)。

@@ -1,0 +1,524 @@
+{
+  "schema_version": "2.0",
+  "context": {
+    "scene": "Scene",
+    "view_layer": "ViewLayer",
+    "frame": 1
+  },
+  "target": {
+    "object": "CarryToolbox",
+    "uv_layer": "UVMap",
+    "material_slot": 0
+  },
+  "material": {
+    "id": "PaintedToolbox",
+    "name": "Painted Toolbox",
+    "template": "procedural_pbr_v1"
+  },
+  "signals": [
+    {
+      "id": "one",
+      "type": "constant",
+      "parameters": {
+        "value": 1
+      },
+      "inputs": {}
+    },
+    {
+      "id": "moisture_patches",
+      "type": "noise",
+      "parameters": {
+        "scale": 3.2,
+        "coordinate": {
+          "space": "OBJECT",
+          "scale": [
+            1,
+            1,
+            0.75
+          ]
+        },
+        "detail": 2,
+        "roughness": 0.55,
+        "seed": 24
+      },
+      "inputs": {}
+    },
+    {
+      "id": "broken_oxide_edges",
+      "type": "noise",
+      "parameters": {
+        "scale": 19,
+        "coordinate": {
+          "space": "OBJECT",
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "detail": 3,
+        "roughness": 0.65,
+        "seed": 41
+      },
+      "inputs": {}
+    },
+    {
+      "id": "oxide_granules",
+      "type": "noise",
+      "parameters": {
+        "scale": 115,
+        "coordinate": {
+          "space": "OBJECT",
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "detail": 2,
+        "roughness": 0.62,
+        "seed": 58
+      },
+      "inputs": {}
+    },
+    {
+      "id": "macro_and_edge_noise_amount",
+      "type": "constant",
+      "parameters": {
+        "value": 0.32
+      },
+      "inputs": {}
+    },
+    {
+      "id": "macro_and_edge_noise",
+      "type": "mix",
+      "parameters": {},
+      "inputs": {
+        "a": "moisture_patches",
+        "b": "broken_oxide_edges",
+        "factor": "macro_and_edge_noise_amount"
+      }
+    },
+    {
+      "id": "patch_distribution",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.42,
+        "from_max": 0.62,
+        "to_min": 0,
+        "to_max": 1,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "macro_and_edge_noise"
+      }
+    },
+    {
+      "id": "bottom_distance",
+      "type": "height_band",
+      "parameters": {
+        "axis": "Z",
+        "low": -0.92,
+        "high": 0.15,
+        "coordinate": {
+          "space": "OBJECT"
+        }
+      },
+      "inputs": {}
+    },
+    {
+      "id": "lower_contact_region",
+      "type": "math",
+      "parameters": {
+        "operation": "SUBTRACT",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "one",
+        "b": "bottom_distance"
+      }
+    },
+    {
+      "id": "contact_edges",
+      "type": "edge",
+      "parameters": {
+        "width": 0.006,
+        "samples": 8,
+        "gain": 24
+      },
+      "inputs": {}
+    },
+    {
+      "id": "sheltered_recess",
+      "type": "cavity",
+      "parameters": {
+        "distance": 0.035,
+        "samples": 8,
+        "only_local": true
+      },
+      "inputs": {}
+    },
+    {
+      "id": "top_rim_region",
+      "type": "math",
+      "parameters": {
+        "operation": "MAXIMUM",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "contact_edges",
+        "b": "sheltered_recess"
+      }
+    },
+    {
+      "id": "localized_weathering",
+      "type": "math",
+      "parameters": {
+        "operation": "MULTIPLY",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "top_rim_region",
+        "b": "patch_distribution"
+      }
+    },
+    {
+      "id": "coating_loss",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.25,
+        "from_max": 0.28,
+        "to_min": 0,
+        "to_max": 1,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "weathering_susceptibility"
+      }
+    },
+    {
+      "id": "oxide_coverage",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.25,
+        "from_max": 0.28,
+        "to_min": 0,
+        "to_max": 1,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "weathering_susceptibility"
+      }
+    },
+    {
+      "id": "intact_coating",
+      "type": "math",
+      "parameters": {
+        "operation": "SUBTRACT",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "one",
+        "b": "coating_loss"
+      }
+    },
+    {
+      "id": "oxide_palette",
+      "type": "ramp",
+      "parameters": {
+        "stops": [
+          {
+            "position": 0.25,
+            "color": [
+              0.033,
+              0.008,
+              0.003,
+              1
+            ]
+          },
+          {
+            "position": 0.43,
+            "color": [
+              0.11,
+              0.023,
+              0.006,
+              1
+            ]
+          },
+          {
+            "position": 0.6,
+            "color": [
+              0.24,
+              0.063,
+              0.014,
+              1
+            ]
+          },
+          {
+            "position": 0.76,
+            "color": [
+              0.38,
+              0.13,
+              0.027,
+              1
+            ]
+          }
+        ]
+      },
+      "inputs": {
+        "value": "broken_oxide_edges"
+      }
+    },
+    {
+      "id": "paint_roughness",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.15,
+        "from_max": 0.85,
+        "to_min": 0.3,
+        "to_max": 0.39,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "oxide_granules"
+      }
+    },
+    {
+      "id": "oxide_roughness",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.15,
+        "from_max": 0.85,
+        "to_min": 0.68,
+        "to_max": 0.9,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "oxide_granules"
+      }
+    },
+    {
+      "id": "oxide_relief",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.15,
+        "from_max": 0.85,
+        "to_min": 0.04,
+        "to_max": 0.4,
+        "clamp": true,
+        "interpolation": "LINEAR"
+      },
+      "inputs": {
+        "value": "oxide_granules"
+      }
+    },
+    {
+      "id": "paint_microtexture",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.1,
+        "from_max": 0.9,
+        "to_min": -0.006,
+        "to_max": 0.006,
+        "clamp": true,
+        "interpolation": "LINEAR"
+      },
+      "inputs": {
+        "value": "oxide_granules"
+      }
+    },
+    {
+      "id": "dust_breakup",
+      "type": "remap",
+      "parameters": {
+        "from_min": 0.3,
+        "from_max": 0.75,
+        "to_min": 0,
+        "to_max": 1,
+        "clamp": true,
+        "interpolation": "SMOOTHSTEP"
+      },
+      "inputs": {
+        "value": "moisture_patches"
+      }
+    },
+    {
+      "id": "recess_dust",
+      "type": "math",
+      "parameters": {
+        "operation": "MULTIPLY",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "sheltered_recess",
+        "b": "dust_breakup"
+      }
+    },
+    {
+      "id": "weathering_master",
+      "type": "constant",
+      "parameters": {
+        "value": 0.4
+      },
+      "inputs": {}
+    },
+    {
+      "id": "weathering_reference_gain",
+      "type": "constant",
+      "parameters": {
+        "value": 2.5
+      },
+      "inputs": {}
+    },
+    {
+      "id": "weathering_relative",
+      "type": "math",
+      "parameters": {
+        "operation": "MULTIPLY",
+        "clamp": false
+      },
+      "inputs": {
+        "a": "weathering_master",
+        "b": "weathering_reference_gain"
+      }
+    },
+    {
+      "id": "weathering_susceptibility",
+      "type": "math",
+      "parameters": {
+        "operation": "MULTIPLY",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "localized_weathering",
+        "b": "weathering_relative"
+      }
+    },
+    {
+      "id": "weathering_dust",
+      "type": "math",
+      "parameters": {
+        "operation": "MULTIPLY",
+        "clamp": true
+      },
+      "inputs": {
+        "a": "recess_dust",
+        "b": "weathering_relative"
+      }
+    }
+  ],
+  "layers": [
+    {
+      "id": "steel",
+      "name": "Steel exposed along coating loss",
+      "enabled": true,
+      "opacity": 1,
+      "mask": null,
+      "channels": {},
+      "values": {
+        "metallic": 1,
+        "roughness": 0.34,
+        "base_color": [
+          0.26,
+          0.28,
+          0.3,
+          1
+        ],
+        "height": -0.07
+      }
+    },
+    {
+      "id": "paint",
+      "name": "Intact industrial enamel",
+      "enabled": true,
+      "opacity": 1,
+      "mask": "intact_coating",
+      "channels": {
+        "roughness": "paint_roughness",
+        "height": "paint_microtexture"
+      },
+      "values": {
+        "metallic": 0,
+        "base_color": [
+          0.025,
+          0.12,
+          0.095,
+          1
+        ],
+        "coat_weight": 0.12,
+        "coat_roughness": 0.25
+      }
+    },
+    {
+      "id": "oxide",
+      "name": "Localized porous oxide",
+      "enabled": true,
+      "opacity": 1,
+      "mask": "oxide_coverage",
+      "channels": {
+        "base_color": "oxide_palette",
+        "roughness": "oxide_roughness",
+        "height": "oxide_relief"
+      },
+      "values": {
+        "metallic": 0
+      }
+    },
+    {
+      "id": "dust",
+      "name": "Protected recess dust",
+      "enabled": true,
+      "opacity": 0.12,
+      "mask": "weathering_dust",
+      "channels": {},
+      "values": {
+        "metallic": 0,
+        "roughness": 0.85,
+        "base_color": [
+          0.12,
+          0.095,
+          0.06,
+          1
+        ],
+        "height": 0.02
+      }
+    }
+  ],
+  "height_distance": 0.001,
+  "mesh_map_size": 2048,
+  "preview": {
+    "engine": "CYCLES",
+    "device": {
+      "backend": "CPU"
+    },
+    "width": 256,
+    "height": 256,
+    "samples": 16,
+    "denoise": false,
+    "color": {
+      "view": "AgX",
+      "exposure": 0,
+      "gamma": 1
+    },
+    "margin": 1.15,
+    "views": [
+      {
+        "id": "raking",
+        "azimuth": 33,
+        "elevation": 19,
+        "lighting": "raking",
+        "focus": [
+          0.935,
+          0.115,
+          0.565
+        ],
+        "zoom": 5
+      }
+    ]
+  }
+}
