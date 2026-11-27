@@ -1,8 +1,8 @@
 # 把 AO 辅助遮罩与交付 AO 分开
 
-<!-- wiki-index: {"id":"MW-011","title":"把 AO 辅助遮罩与交付 AO 分开","stage":"export","material":"通用","effect":"AO 路由","channel":"AO、Base Color","symptom":"程序导出拒绝 AO 通道","evidence":"single","applies":"Material Workflow 0.9.2 主机合同；投射未复验"} -->
+<!-- wiki-index: {"id":"MW-011","title":"把 AO 辅助遮罩与交付 AO 分开","stage":"export","material":"通用","effect":"AO 路由","channel":"AO、Base Color","symptom":"程序导出拒绝 AO 通道","evidence":"single","applies":"Material Workflow 0.9.2；Blender 5.3.0 Cycles CPU 三岛合成试样"} -->
 
-适用：Material Workflow 0.9.2。证据：单件复现（程序导出合同）。
+适用：Material Workflow 0.9.2。证据：单件复现（程序导出合同、原生三岛投射）。
 
 ## 任务
 
@@ -18,7 +18,7 @@
 
 ## 通过条件
 
-程序导出可同时声明 Normal 和 Height，直接声明 AO 则拒绝。投射验收：先确认开阔平面和同一高模上的凹槽都命中，再比较 AO 灰度；平面比凹槽亮，Base Color 不变。按[原生试样协议](../labs/texture-contract.md#原生-ao-投射验收)保留局部命中证据。
+程序导出可同时声明 Normal 和 Height，直接声明 AO 则拒绝。投射验收：先确认开阔平面和同一高模上的凹槽都命中，再比较 AO 灰度；平面比凹槽亮；正式导出 AO 后另核对 Base Color 未混入 AO。96 个纹素从全部命中变为全部漏射，AO 仍为 65,535；详见[原生试样和实测值](../labs/texture-contract.md#原生-ao-投射验收)保留局部命中证据。
 
 ## 失败处理
 
