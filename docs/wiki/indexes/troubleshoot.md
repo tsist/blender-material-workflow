@@ -30,6 +30,10 @@
 
 - [MW-003 · 分离掉漆、露钢和锈蚀](../techniques/003-chip-and-rust.md) · 单件复现
 
+## 法线看似平整或旋转 UV 后接缝突变
+
+- [MW-015 · 用偏斜样片核对法线 UV](../techniques/015-check-tangent-uv-basis.md) · 单件复现
+
 ## 烘焙报重叠或 UV 越界
 
 - [MW-007 · 烘焙前查目标槽 UV](../techniques/007-uv-preflight.md) · 单件复现

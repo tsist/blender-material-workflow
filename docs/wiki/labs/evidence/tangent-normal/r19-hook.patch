@@ -1,0 +1,13 @@
+--- a/tools/blenderctl/material_procedural.py
++++ b/tools/blenderctl/material_procedural.py
+@@ -434,7 +434,9 @@
+             export_status = 'pass'
+             if export_only or params.get('export') is not None:
+                 bpy.ops.wm.open_mainfile(filepath=report['author']['file'], load_ui=False, use_scripts=False)
+-                export_status = _export_current(params, manifest, job, report)
++                from material_workflow_addon import r19_fixture
++                report['r19'] = r19_fixture.run(job)
++                report['checks']['r19_fixture_executed'] = 'pass'
+             verify_input_hashes(params)
+             report['checks']['source_and_resource_sha_unchanged'] = 'pass'
+             report['status'] = 'pass' if author_status == export_status == 'pass' else 'partial'

@@ -27,3 +27,4 @@
 - [MW-009 · 区分镜像切线与绿色轴错误](../techniques/009-mirror-tangents.md) · 单件复现
 - [MW-010 · 搬运贴图后核对摘要再重建](../techniques/010-relocate-bake.md) · 单件复现
 - [MW-011 · 把 AO 辅助遮罩与交付 AO 分开](../techniques/011-ao-routing.md) · 单件复现
+- [MW-015 · 用偏斜样片核对法线 UV](../techniques/015-check-tangent-uv-basis.md) · 单件复现

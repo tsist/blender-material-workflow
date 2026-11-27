@@ -42,6 +42,10 @@
 
 - [MW-004 · 按几何位置分配旧化信号](../techniques/004-mesh-map-roles.md) · 来源已核
 
+## 通用 / 切线基与扩边 / Normal
+
+- [MW-015 · 用偏斜样片核对法线 UV](../techniques/015-check-tangent-uv-basis.md) · 单件复现
+
 ## 通用 / 填充边距 / Base Color、Roughness
 
 - [MW-008 · 用缩图定位 UV 边缘渗色](../techniques/008-padding-mips.md) · 单件复现
