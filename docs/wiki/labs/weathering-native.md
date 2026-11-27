@@ -85,3 +85,37 @@ PY
 ```
 
 读取 `json` 字符串（不是外部响应整包）的 UTF-8 SHA-256：659 `808aced3007670f594dd2b40d4884080da1cb29f3530ecfdf44d01082519412b`；1243 `1108af82d90bd992c0a27a1f6d84aeb6fa8ac1a3abb79a42a89e5e2d7292aba0`。如哈希变化，重新追踪。按节点遍历是保守的依赖筛查，不解析着色器或求值；不据此认证运行时、GPU 成本或最终像素。
+
+## R24｜单向沉积层必须显式限制写入通道
+
+本轮把运输和合成分两层验证。先独立生成 128²、16 位遮罩：同一源点沿一个方向位移 1–32 px、递减权重、取最大值，并排除原破口；边界零填充，不回卷。顺向只有下侧 166 纹素，反向只有上侧 166；双向错误两侧各 166。将二维 UV 图旋转 90° 后继续沿图像行采样会变成横向；同时变换方向再还原，同原遮罩逐像素相同。这里的运输在图像域完成；没有模拟世界重力或跨 UV 岛的连续流动。
+
+将遮罩作为独立 Non-Color 资源接入同一个便携箱研究副本。Blender 5.3.0 / Cycles CPU；隔离 CLI `4046c7a`、材质候选 `0f39fcf`。沉积层在样片中只改 Base Color 和 Roughness。**必须写 `affects`；省略字段时这一版本让层参与全部通道，漏写的值会取默认值，不能当作继承下层。** 例如：
+
+```json
+{
+  "id": "deposit", "name": "Runoff deposit", "enabled": true, "opacity": 1,
+  "mask": "downstream", "affects": ["base_color", "roughness"],
+  "channels": {}, "values": {"base_color": [0.25, 0.12, 0.052, 1], "roughness": 0.55}
+}
+```
+
+```sh
+blenderctl --jobs-dir "$jobs" material procedural-run "$whitebox" \
+  --expected-sha256 "$whitebox_sha" --resources "$resources" \
+  --manifest "$manifest" --export "$export"
+```
+
+六组均完成作者工程冷开、原始文件/资源 SHA 守卫、贴图重建及重开。固定 128²、4 样本、零扩边，独立解码 16 位 PNG 和浮点 EXR；8,849 个已覆盖纹素内，相对显式顺向组的变化数：
+
+| 对照 | Base Color | Roughness | Metallic | Height |
+| --- | ---: | ---: | ---: | ---: |
+| 反向 | 414 | 413 | 0 | 0 |
+| 双向错误遮罩 | 195 | 194 | 0 | 0 |
+| 同顺向遮罩，省略 `affects` | 0 | 0 | 0 | 219 |
+| 同顺向遮罩，故意把金属与高度接进沉积层 | 0 | 0 | 219 | 219 |
+| UV 补偿后等价遮罩 | 0 | 0 | 0 | 0 |
+
+省略 `affects` 时，RGB 和 Roughness 完全一样，但 Height 最大绝对差为 0.090155（导出数值；不是米）。因此不能只凭颜色和粗糙度通过验收。正确反向和双向组的 Metallic、Height、Alpha 全图解码值同基准完全一致。双向例仍应因方向错误打回。这个样片是通道隔离试验，不是成品材质评审；有实体积垢时，应另明确独立的沉积微起伏，不能悄悄改基材厚度。
+
+![上：单向、反向、双向和 UV 方向控制；下：实际烘焙通道差异](images/runoff-r24.png)

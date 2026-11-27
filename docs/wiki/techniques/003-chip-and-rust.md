@@ -29,3 +29,5 @@
 基线合同复现同掩膜；新版做法通过两箱原生消融、局部轴旋转和 512² 出图。此证据不代表独立质量复验或智能材质定稿。[对照命令](../labs/mask-baseline.md)；[剥漆教程](https://www.adobe.com/us/learn/substance-3d-painter/web/substance-painter-peeled-paint-effect)。
 
 源点与尾迹也分开：原地氧化受露钢限制，流痕沉积可以越过完好漆面。验证时只改流痕方向或长度，保护原地锈、露钢与流痕起点不变。分别读遮罩，不从最终颜色反推。[两份 Material Maker 源图与端口检查](../labs/weathering-native.md#material-maker-源图先查斑点和流痕有没有独立出口)。
+
+薄层流痕只写颜色和粗糙度时，显式设置 `affects: ["base_color", "roughness"]`。省略该字段不是继承：实测颜色、粗糙度都没变，高度仍误改 219 个纹素。[方向与漏写通道的正反对照](../labs/weathering-native.md#r24单向沉积层必须显式限制写入通道)。
