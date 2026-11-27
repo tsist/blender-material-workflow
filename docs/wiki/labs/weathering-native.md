@@ -30,3 +30,58 @@ blenderctl --jobs-dir "$jobs" material procedural-run "$whitebox" \
 ![真实 Cycles 遮罩消融和两种灯光下的纯贴图重建对照](images/weathering-native.png)
 
 商业行为对照：[Adobe Painter 水迹](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/effects/generators/dripping-rust)、[Designer 的 Leaks 输入](https://experienceleague.adobe.com/en/docs/substance-3d-designer/using/substance-graphs/nodes-reference-for-substance-graphs/node-library/mesh-based-generators/mask-generators/leaks)。复验是自写配方，不是对商业生成器的像素复刻。
+
+## Material Maker 源图：先查斑点和流痕有没有独立出口
+
+证据：两份公开 `.ptex` 的静态接线，不是 Material Maker 烘图。下表中的通道编号由 [1.2p1 Material](https://github.com/RodZill4/material-maker/blob/8157a288b607c7752880395e06c5bf4f3466bd51/addons/material_maker/nodes/material.mmg) 和 [1.4 Tessellated](https://github.com/RodZill4/material-maker/blob/a6f76d5a5ece8a29146620f07975ee40543f4e29/addons/material_maker/nodes/material_tesselated.mmg) 的输入定义确认。两个条目均标 CC0；派生图内嵌自定义分组和着色器，未逐项核验再分发许可，未移植。
+
+| 源图 | 可核查接线 | 判断 |
+| --- | --- | --- |
+| [Arnklit，659](https://materialmaker.org/material?id=659)，40 个顶层节点、52 条边 | Voronoi 与 FBM 合成后过 `tones_step_2`。该阈值可达颜色、粗糙度、法线、AO；反转后经 `directional_blur → warp_2 → blend2_5` 到颜色。Metallic 端口无接线，参数为 0。 | 借鉴涂层边缘与流痕的分支；不能把这张图的颜色当作露钢或氧化遮罩。 |
+| [rubberduck，1243](https://materialmaker.org/material?id=1243)，285 个顶层节点、341 条边 | 两个 `Chipping Mask Gen` 合流到 `blend2_52`；该节点能到六个已接线的 PBR 输入。两个 `Rust Leaks` 各有不透明度、长度、角度图输入；第二个接了不透明度输入。两组均只把输出 0（流痕）接到顶层下游；输出 1（起点斑）虽已提供，当前未接出。 | 可借鉴起点与流痕的独立端口。流痕本身的接线可达颜色、粗糙度、法线、深度；可达代表需要复验，不代表各通道像素一定变化。 |
+
+两图都没有独立遮罩 Export 节点。验证时把中间信号接到 [Export 节点](https://rodzill4.github.io/material-maker/doc/node_miscellaneous_export.html)，不要从最终颜色倒推。自研验收加两步：
+
+1. 同一源点先分别输出涂层破口、原地氧化、流痕起点与流痕尾迹。只改流痕长度或方向，比较尾迹而不是只看 Base Color；破口、原地氧化与起点应不变。正例用单侧窄条；反例把模糊改成双侧，必须能检出逆向尾巴。
+2. 原地锈仍满足 `氧化 ≤ 露钢`。流痕尾迹属于沉积层，可以经过下方完好的漆面，不能借尾迹打开露钢、涂层深度或金属度。图中的角度贴在二维纹理上；真实重力另用旋转资产或旋转 UV 的控制组验收。
+
+### 复核源图与端口
+
+```sh
+for id in 659 1243; do
+  curl -fsSL "https://materialmaker.org/api/getMaterial?id=$id" -o "$id.json"
+done
+python - <<'PY'
+from collections import deque
+import hashlib, json
+seeds = {659: ["tones_step_2", "directional_blur"],
+         1243: ["blend2_52", "graph_9", "graph_14"]}
+for i, names in seeds.items():
+    with open(f"{i}.json", encoding="utf8") as f:
+        payload = json.load(f)
+    assert int(payload["id"]) == i
+    raw = payload["json"].encode()
+    g = json.loads(raw)
+    edges = g["connections"]
+    print(i, hashlib.sha256(raw).hexdigest(), len(g["nodes"]), len(edges))
+    for name in names:
+        todo, seen, ports = deque([name]), {name}, set()
+        while todo:
+            src = todo.popleft()
+            for e in edges:
+                if e["from"] != src:
+                    continue
+                dst = e["to"]
+                if dst == "Material":
+                    ports.add(e["to_port"])
+                elif dst not in seen:
+                    seen.add(dst)
+                    todo.append(dst)
+        print(name, sorted(ports))
+    for e in edges:
+        if e["from"] in {"graph_9", "graph_14"}:
+            print(e["from"], e["from_port"], e["to"])
+PY
+```
+
+读取 `json` 字符串（不是外部响应整包）的 UTF-8 SHA-256：659 `808aced3007670f594dd2b40d4884080da1cb29f3530ecfdf44d01082519412b`；1243 `1108af82d90bd992c0a27a1f6d84aeb6fa8ac1a3abb79a42a89e5e2d7292aba0`。如哈希变化，重新追踪。按节点遍历是保守的依赖筛查，不解析着色器或求值；不据此认证运行时、GPU 成本或最终像素。
