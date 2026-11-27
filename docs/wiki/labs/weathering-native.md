@@ -119,3 +119,30 @@ blenderctl --jobs-dir "$jobs" material procedural-run "$whitebox" \
 省略 `affects` 时，RGB 和 Roughness 完全一样，但 Height 最大绝对差为 0.090155（导出数值；不是米）。因此不能只凭颜色和粗糙度通过验收。正确反向和双向组的 Metallic、Height、Alpha 全图解码值同基准完全一致。双向例仍应因方向错误打回。这个样片是通道隔离试验，不是成品材质评审；有实体积垢时，应另明确独立的沉积微起伏，不能悄悄改基材厚度。
 
 ![上：单向、反向、双向和 UV 方向控制；下：实际烘焙通道差异](images/runoff-r24.png)
+
+## R25｜世界下坡先投到表面，再换算 UV
+
+适用：需要流痕随物体实际朝向变化的静态表面。验证范围为离线三角面计算与已归档便携箱网格筛选；未运行 Blender、烘图、求解跨棱液体或完成视觉验收。
+
+1. 用求值后的**世界坐标**三角形边组成矩阵 (A)（3×2），用相同顶点顺序的 UV 边组成 (U)（2×2）；几何法线从 (A) 两列叉积求出，不用法线贴图。(J=A U^{-1}) 是 UV 到世界位移的雅可比。[pbrt 的三角面微分](https://www.pbr-book.org/4ed/Shapes/Triangle_Meshes) 给出同类求导；流痕拒绝退化 UV，不借用着色器任意切线作回退。
+2. 对单位世界下向量 (g) 计算 (g_t=g-n(ncdot g))。试件采用 (d=0.020g_t) 米，保留坡度；这是可控的单步比例，不是液体速度。用最小二乘解 (J,Delta uv=d)，或先解 (Ab=d) 再计算 (Delta uv=Ub)。不要把 (Delta uv) 再归一化。对于行向下的宽 (W)、高 (H) 的贴图，像素位移为 ((WDelta u,-HDelta v))。
+3. 用 (J,Delta uv) 读回世界方向和长度。试件 4 种表面状态 × 5 种 UV 布局：立板为 20 mm，45° 倾板 14.14 mm，水平板为零；旋转、翻转、剪切和拉伸 UV 后，世界位移不变。2048×1024 立板原、旋转、镜像、拉伸分别读到 ((0,10.24))、((20.48,0))、((0,-10.24))、((0,30.72)) px。固定“UV 向下”会让旋转组在世界横跑 40 mm；固定 UV 步长 0.01 会把拉伸组的 20 mm 压至 6.67 mm。
+
+```python
+import numpy as np
+g = np.array([0., 0., -1.])
+# P: 3x3 world vertices; Q: 3x2 UVs, same corner order.
+A, U = (P[1:] - P[0]).T, (Q[1:] - Q[0]).T
+if max(np.linalg.cond(A), np.linalg.cond(U)) > 1e5:
+    raise ValueError("degenerate triangle or UV chart")
+n = np.cross(A[:, 0], A[:, 1])
+n /= np.linalg.norm(n)
+d = .020 * (g - n * (g @ n))
+delta = U @ np.linalg.lstsq(A, d, rcond=None)[0]
+J = np.linalg.solve(U.T, A.T).T
+assert np.linalg.norm(J @ delta - d) < 1e-10
+```
+
+跨岛前先用共享几何边配对，不在图集上直接拖线。检查两侧对边顶点重心坐标的变化：上游出片为负，下游进片为正；水平终点为零不能作连续下坡。共面合成缝通过，后片放平的负例被拒。便携箱 1,300 个有效三角面、856 条 UV 切口，242 条符号满足；其中 34 条长度至少 9 mm，但折角为 60.72°–90.26°。预设的近共面门槛（≥2 mm、≤5°）没有任何候选。这是边筛选，不是路径追踪或实际沉积结果。下一次要测过棱，应另设明确的折角、挡边与积流策略。
+
+![同一世界位移在旋转、镜像、拉伸及坡度变化下的 UV 正反例](images/gravity-uv-r25.png)
