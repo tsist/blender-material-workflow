@@ -42,4 +42,20 @@ Blender 5.3.0（02f0899d78e3）／Cycles CPU，投射源码固定在 9d560ee（�
 
 复跑：用证据包的 replay/replay.sh（R16/R17 验证输入，以及 BLENDER_BIN 和 CPUSET）。脚本走隔离 blenderctl 0.64.0（4046c7a）的受管 material procedural-run 作业，在已重开的工作副本内调用插件原有 bake_projection；研究适配器替换的是原导出支路。material --help 未注册投射入口，不把复跑当作生产 CLI 支持。固定 ROI 为 PNG 左上原点半开坐标：开阔 [20,58,28,70]，凹槽 [60,58,68,70]，可移除 [100,58,108,70]。证据包括原生收据、原始双见证、FFmpeg 16 位解码与正反图。
 
-跨物件遮挡另验。Painter 的 [Common Match 与次级射线](https://experienceleague.adobe.com/en/docs/substance-3d/bakers/common-questions/why-is-matching-by-name-not-working-with-ambient-occlusion-thickness) 和 [Self Occlusion 选项](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/baking/mesh-map-settings) 是两项控制；插件固定 Only Local，[该 Cycles CPU SVM 路径](https://github.com/blender/blender/blob/02f0899d78e3/intern/cycles/kernel/svm/ao.h#L71-L89)按命中的对象身份限制 AO 射线。下一对照保持主射线接收与源身份不变，只把凹槽挡板从同一高模拆为单独源。这里记录源码差异，不判 Painter 画质。
+跨物件遮挡另验。Painter 的 [Common Match 与次级射线](https://experienceleague.adobe.com/en/docs/substance-3d/bakers/common-questions/why-is-matching-by-name-not-working-with-ambient-occlusion-thickness) 和 [Self Occlusion 选项](https://experienceleague.adobe.com/en/docs/substance-3d-painter/using/baking/mesh-map-settings) 是两项控制；插件固定 Only Local，[该 Cycles CPU SVM 路径](https://github.com/blender/blender/blob/02f0899d78e3/intern/cycles/kernel/svm/ao.h#L71-L89)按命中的对象身份限制 AO 射线。以下用固定射线与同一底面验证拆件影响，不比较 Painter 实际画质。
+
+### 同样命中，拆件后接缝 AO 变浅
+
+同一底面和离轴挡板分别按三种源组织投射：同一高模物件、拆为两个高模物件但仍都列为源、移除挡板。挡板不截断两处采样区的垂直主射线；近区距挡板 0.081–0.227，远区 1.602–1.748（模型单位）。沿用上段的 128²、32 samples、无 Cage、Extrusion 0、Max Ray Distance 0.10、AO Distance 1.50。三组接收覆盖与命中图完全一致：9,409／9,409，零漏射。用 FFmpeg 解码原始 16 位数据，两个 ROI 各取 192 纹素。
+
+| 源组织 | 近挡板 AO 中位数 | 远处 AO 中位数 |
+|---|---:|---:|
+| 挡板与底面同一源物件 | 37,567 | 65,535 |
+| 挡板是另一个源物件，仍入选 | 65,535 | 65,535 |
+| 挡板不存在 | 65,535 | 65,535 |
+
+拆件组与无墙组的整图 RGBA 像素一致；合并与拆件有 7,944 个 AO 值不同。**把零件加入投射源，不会让它在固定版本的 Only Local 下遮挡另一件。** 接缝遮罩缺失时，先查高模零件是否拆开，再判断是否值得单独设计接触遮罩。此处没测试全场 AO，也没有在正式资产上试合并高模，工作流不改默认。
+
+![三组原生 AO：并在同一物体的挡板形成遮挡，拆件结果和移除挡板一样。](images/ao-object-scope.png)
+
+复跑用 R22 复跑包的 replay/replay.sh，和上段相同的隔离 Blender CLI／源码，不用独立脚本写工程。PNG 左上半开坐标：近区 [29,52,37,76]；远区 [102,52,110,76]。这是同一个几何夹具的证据，不是跨资产复验。
