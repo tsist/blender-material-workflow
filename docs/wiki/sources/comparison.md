@@ -19,3 +19,7 @@
 - [Toolbag 投射工具](https://docs.marmoset.co/docs/projection-tools/)：投射偏移与偏斜按烘焙组控制，UV 改变要重新核对修正图。与 Blender 的投射命中见证分开记录。
 
 只存原创测试与具备再分发许可的资产，逐件记录来源、许可、版本和摘要。代码许可与素材许可分开。不把商业教程附件或旧项目工程放进公开仓。
+
+### 笔迹副本：结构相同，不等于数据独立
+
+2026-11-28 源码定点复核。[Ucupaint 2.4.9 图层复制](https://github.com/ucupumar/ucupaint/blob/138cdfc74702f2f61c1f342dece26b8ff67a933b/Layer.py#L5413-L5540)先复制节点结构，再按外部图／打包图选项处理数据；外部图复制未启用时可沿用原图。处理图集与 UDIM 时还单独管理区段和映射；同批节点原来共用一幅普通图时，可共用一份新图。其[图像复制辅助函数](https://github.com/ucupumar/ucupaint/blob/138cdfc74702f2f61c1f342dece26b8ff67a933b/common.py#L7875-L7947)特意处理未提交的像素，说明不能只检查复制出的名称。这里只读源码，不运行、不引入 Ucupaint。
