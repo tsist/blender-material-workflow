@@ -1,0 +1,9 @@
+{
+  "size": 2048,
+  "margin": 4,
+  "samples": 16,
+  "bit_depth": "16",
+  "channels": [
+    "roughness"
+  ]
+}

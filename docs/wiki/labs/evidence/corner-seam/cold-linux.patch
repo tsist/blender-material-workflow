@@ -1,0 +1,11 @@
+--- a/tools/blenderctl/runner.py
++++ b/tools/blenderctl/runner.py
+@@ -154,7 +154,7 @@
+     error = None
+     data = None
+     worker_exit = None
+-    linux_material = sys.platform == 'linux' and request['command'] in ('material.procedural-run', 'material.procedural-export')
++    linux_material = sys.platform == 'linux' and request['command'] in ('material.procedural-run', 'material.procedural-export', 'project.verify')
+     if linux_material:
+         from linux_file_guard import LinuxFileGuard, check_all_guards
+     input_guards = ExitStack()

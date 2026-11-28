@@ -1,0 +1,34 @@
+--- a/tools/material_workflow_addon/procedural_mesh_maps.py
++++ b/tools/material_workflow_addon/procedural_mesh_maps.py
+@@ -266,7 +266,7 @@
+         for request in normalized:
+             ident, kind, params = request['id'], request['type'], request['parameters']
+             image = bpy.data.images.new('MWMeshMap/' + ident + '/' + token,
+-                        width=size, height=size, alpha=False, float_buffer=False)
++                        width=size, height=size, alpha=False, float_buffer=True)
+             images.append(image)
+             image.colorspace_settings.name = 'Non-Color'
+             image.generated_color = (0, 0, 0, 1)
+@@ -283,14 +283,19 @@
+             path = run_dir / (ident + '.png')
+             if path.exists(): raise WorkflowError('mesh_map_output_exists', str(path))
+             image.file_format = 'PNG'; image.filepath_raw = str(path)
+-            image.save()
++            scene.view_settings.view_transform = 'Raw'
++            scene.render.dither_intensity = 0.0
++            scene.render.image_settings.file_format = 'PNG'
++            scene.render.image_settings.color_mode = 'RGB'
++            scene.render.image_settings.color_depth = '16'
++            image.save_render(str(path), scene=scene)
+             data = path.read_bytes()
+-            if data[:8] != b'\x89PNG\r\n\x1a\n' or struct.unpack('>II', data[16:24]) != (size, size):
++            if data[:8] != b'\x89PNG\r\n\x1a\n' or data[24] != 16 or struct.unpack('>II', data[16:24]) != (size, size):
+                 raise WorkflowError('mesh_map_output_invalid', 'PNG dimensions/signature differ')
+             pixels = array('f', [0.0]) * (size * size * 4)
+             image.pixels.foreach_get(pixels)
+             decoded = None
+-            tolerance = 1.0 / 255.0 + 1e-6
++            tolerance = 1.0 / 65535.0 + 1e-6
+             try:
+                 decoded = bpy.data.images.load(str(path), check_existing=False)
+                 decoded.colorspace_settings.name = 'Non-Color'

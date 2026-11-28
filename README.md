@@ -12,6 +12,8 @@ This is a repository-management split only. Plugin runtime modules, Blender mani
 
 The original [blenderctl](https://github.com/tsist/blenderctl) repository retains its existing layout and bundled material core. There is no submodule and no recursive-clone requirement. Background handoff still uses a normal blenderctl checkout containing `tools/blenderctl/cli.py`. This repository alone is not a CLI backend root.
 
+[Agent 工艺 Wiki](docs/wiki/README.md) · 三入口、复验命令与证据等级。
+
 ## Downloads
 
 - `material-workflow-0.7.2.zip`: Blender extension installed from Preferences → Extensions → Install from Disk.

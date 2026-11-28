@@ -1,0 +1,289 @@
+{
+  "build": "02f0899d78e3",
+  "engine": "CYCLES",
+  "device": "CPU",
+  "samples": 8,
+  "build_version": "5.3.0",
+  "uv": "R19_UV",
+  "chart": [
+    [
+      [
+        0.125,
+        0.25
+      ],
+      [
+        0.375,
+        0.25
+      ],
+      [
+        0.375,
+        0.5
+      ],
+      [
+        0.125,
+        0.5
+      ]
+    ],
+    [
+      [
+        0.625,
+        0.5
+      ],
+      [
+        0.625,
+        0.25
+      ],
+      [
+        0.875,
+        0.25
+      ],
+      [
+        0.875,
+        0.5
+      ]
+    ]
+  ],
+  "normals": {
+    "named_tilt": {
+      "file": "named_tilt.exr",
+      "sha256": "5a25190f7bf257cb020d5d9fbd7d6f1a53fb6c70e076789c050b5e0e48f5dd6d",
+      "rgb": [
+        [
+          0.8000000715255737,
+          0.5,
+          0.9000000357627869
+        ],
+        [
+          0.8000000715255737,
+          0.5,
+          0.9000000357627869
+        ]
+      ]
+    },
+    "strength_zero": {
+      "file": "strength_zero.exr",
+      "sha256": "0993140544c343513af313a36d262965e238d885b3201891aef5445161de842f",
+      "rgb": [
+        [
+          0.5,
+          0.5,
+          1.0
+        ],
+        [
+          0.5,
+          0.5,
+          1.0
+        ]
+      ]
+    },
+    "missing_name": {
+      "file": "missing_name.exr",
+      "sha256": "fa79b62c5570a80348f8714d46e88b2cecf5ba0e48979e336868ae919b542cb2",
+      "rgb": [
+        [
+          0.5,
+          0.5,
+          1.0
+        ],
+        [
+          0.5,
+          0.5,
+          1.0
+        ]
+      ]
+    },
+    "same_rgb_rotated": {
+      "file": "same_rgb_rotated.exr",
+      "sha256": "fd853006e9a347fccc3af10497bee441a8a9d36bd84d56021d3ef3fde0383d1a",
+      "rgb": [
+        [
+          0.8000000715255737,
+          0.5,
+          0.9000000357627869
+        ],
+        [
+          0.5,
+          0.8000000715255737,
+          0.9000000357627869
+        ]
+      ]
+    }
+  },
+  "bakes": {
+    "normal_extend_0": {
+      "file": "normal_extend_0.exr",
+      "sha256": "fbe857801a11db3a439915dfb35c619f11f1c7f780004a669406e58a8a80f7ca",
+      "raw": "normal_extend_0.rgba-f32",
+      "raw_sha256": "0dc4ee645784b99cbbf2716dc7a2e77983740dc2dfdb81b2cc48878eab658dc8",
+      "mode_requested": "EXTEND",
+      "margin": 0
+    },
+    "normal_extend_8": {
+      "file": "normal_extend_8.exr",
+      "sha256": "7340417f41e0e61b2187aa7874c3f9d78544a87b0193095224e61446c5a4f9d6",
+      "raw": "normal_extend_8.rgba-f32",
+      "raw_sha256": "c03900464b24266f3acd4dbf524a7fbfbaf00c9b0a5f1bf5642931c825a4059f",
+      "mode_requested": "EXTEND",
+      "margin": 8
+    },
+    "normal_adjacent_faces_8": {
+      "file": "normal_adjacent_faces_8.exr",
+      "sha256": "7340417f41e0e61b2187aa7874c3f9d78544a87b0193095224e61446c5a4f9d6",
+      "raw": "normal_adjacent_faces_8.rgba-f32",
+      "raw_sha256": "c03900464b24266f3acd4dbf524a7fbfbaf00c9b0a5f1bf5642931c825a4059f",
+      "mode_requested": "ADJACENT_FACES",
+      "margin": 8
+    },
+    "emit_extend_0": {
+      "file": "emit_extend_0.exr",
+      "sha256": "ed145d4bd06d4587839663c1fcd24ba92fee49326573abce4f02f00331d2a338",
+      "raw": "emit_extend_0.rgba-f32",
+      "raw_sha256": "85e3a1bfc140ea18056d7706bc51e632d4ceb019340bf19e21d97228d0e53d83",
+      "mode_requested": "EXTEND",
+      "margin": 0
+    },
+    "emit_extend_8": {
+      "file": "emit_extend_8.exr",
+      "sha256": "49e3f2e01e3a1cb6c21fae8373923b9e9355d151921c8f68deade0a133ac391a",
+      "raw": "emit_extend_8.rgba-f32",
+      "raw_sha256": "764226e690ed039f159d21d027d7123184fbc81fb07279dfa85de2dd851fcfb0",
+      "mode_requested": "EXTEND",
+      "margin": 8
+    },
+    "emit_adjacent_faces_8": {
+      "file": "emit_adjacent_faces_8.exr",
+      "sha256": "917194028d2fa919a587dd73b8c029dfc6c1012b75b3b12ef2cd187f69e8fc4e",
+      "raw": "emit_adjacent_faces_8.rgba-f32",
+      "raw_sha256": "777ca59700caa36cdaa4c269b16522014799bd8878d2b30c9a281ad4f78fa123",
+      "mode_requested": "ADJACENT_FACES",
+      "margin": 8
+    }
+  },
+  "probe_metrics": {
+    "named_tilt": {
+      "world_normals": [
+        [
+          0.6000000572204492,
+          0.0,
+          0.7999999570846599
+        ],
+        [
+          0.6000000572204492,
+          0.0,
+          0.7999999570846599
+        ]
+      ],
+      "tilt_degrees": [
+        36.86990174395694,
+        36.86990174395694
+      ],
+      "direction_error_deg": [
+        4.098112917421704e-06,
+        4.098112917421704e-06
+      ],
+      "across_charts_degrees": 0.0
+    },
+    "strength_zero": {
+      "world_normals": [
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "tilt_degrees": [
+        0.0,
+        0.0
+      ],
+      "direction_error_deg": [
+        0.0,
+        0.0
+      ],
+      "across_charts_degrees": 0.0
+    },
+    "missing_name": {
+      "world_normals": [
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "tilt_degrees": [
+        0.0,
+        0.0
+      ],
+      "direction_error_deg": [
+        0.0,
+        0.0
+      ],
+      "across_charts_degrees": 0.0
+    },
+    "same_rgb_rotated": {
+      "world_normals": [
+        [
+          0.6000000572204492,
+          0.0,
+          0.7999999570846599
+        ],
+        [
+          0.0,
+          0.6000000572204492,
+          0.7999999570846599
+        ]
+      ],
+      "tilt_degrees": [
+        36.86990174395694,
+        36.86990174395694
+      ],
+      "direction_error_deg": [
+        4.098112917421704e-06,
+        4.098112917421704e-06
+      ],
+      "across_charts_degrees": 50.20818562058437
+    }
+  },
+  "gutter_metrics": {
+    "covered_pixels_baseline_emit_alpha": 2178,
+    "native_rgb_pixels_changed_after_adding_8": 2336,
+    "native_extend_vs_requested_adjacent_changed": 0,
+    "emit_extend_vs_adjacent_rgba_changed": 1493,
+    "emit_shared_edge_donor_count": 262,
+    "left_gutter_pixel_xy_from_bottom": [
+      50,
+      48
+    ],
+    "left_gutter_emit_extend": [
+      0.8000000715255737,
+      0.5,
+      0.9000000357627869
+    ],
+    "left_gutter_emit_adjacent": [
+      0.5,
+      0.20000001788139343,
+      0.9000000357627869
+    ],
+    "left_gutter_native_zero": [
+      0.5,
+      0.5,
+      1.0
+    ],
+    "left_gutter_native_extend": [
+      0.8000099658966064,
+      0.5000100135803223,
+      0.9000100493431091
+    ],
+    "gutter_angle_if_donor_read_in_receiver_deg": 50.20818328857422,
+    "native_interior_max_error_deg": 0.001976406123240325
+  }
+}

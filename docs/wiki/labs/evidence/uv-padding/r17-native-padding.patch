@@ -1,0 +1,34 @@
+--- a/tools/material_workflow_addon/procedural_bake.py
++++ b/tools/material_workflow_addon/procedural_bake.py
+@@ -836,16 +836,25 @@
+                 for link in list(target_output.inputs['Surface'].links):links.remove(link)
+                 links.new(control.outputs['R16 Probe'], emit.inputs['Color'])
+                 links.new(emit.outputs[0], target_output.inputs['Surface'])
+-                result = bpy.ops.object.bake(type='EMIT', target='IMAGE_TEXTURES', margin=0,
+-                    use_clear=True, uv_layer=uv_layer)
+-                if result != {'FINISHED'}:
+-                    _fail('bake_operator', 'R16 probe bake did not finish')
+-                path = run_dir/'r16-probe.exr'
++
++                # Same actual graph, UV, geometry, pixels and samples in each arm.
+                 scene.view_settings.view_transform = 'Raw'
+                 scene.render.image_settings.file_format = 'OPEN_EXR'
+                 scene.render.image_settings.color_mode = 'RGBA'
+                 scene.render.image_settings.color_depth = '32'
+-                image.save_render(str(path), scene=scene)
++                sweep = [('EXTEND',0)] + [(m,p) for m in ('EXTEND','ADJACENT_FACES') for p in (4,8,16)]
++                for mode,pixels in sweep:
++                    result = bpy.ops.object.bake(type='EMIT', target='IMAGE_TEXTURES', margin=pixels,
++                        margin_type=mode,use_clear=True,uv_layer=uv_layer)
++                    if result != {'FINISHED'}:
++                        _fail('bake_operator', f'R17 probe bake did not finish: {mode} {pixels}')
++                    file_name = 'r16-probe.exr' if pixels==0 else f'pad_{mode.lower()}_{pixels}.exr'
++                    image.save_render(str(run_dir/file_name),scene=scene)
++                _write_report(run_dir/'r17-settings.json', {
++                    'mode_pixels': sweep, 'sample_count': config['samples'], 'image_side': config['size'],
++                    'engine': scene.render.engine, 'device': scene.cycles.device,
++                    'source': 'connected_remap_input,coating_loss,roughness,alpha',
++                })
+                 uvs = duplicate.data.uv_layers[uv_layer].uv
+                 duplicate.data.calc_loop_triangles()
+                 _write_report(run_dir/'r16-surface.json',{

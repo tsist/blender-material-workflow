@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import struct
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {'.git', '__pycache__', '.venv', 'runtime', 'dist', 'test-output'}
@@ -24,6 +26,45 @@ def public_files():
     return sorted(p for p in ROOT.rglob('*') if p.is_file() and not set(p.relative_to(ROOT).parts) & EXCLUDED)
 
 
+
+def is_wiki_image(path, relative):
+    return (relative.parts[:4] == ('docs', 'wiki', 'labs', 'images')
+            and len(relative.parts) == 5 and path.suffix == '.png')
+
+
+def validate_wiki_png(path):
+    # Only small, original evidence PNGs with no metadata chunks.
+    if path.stat().st_size > 512 * 1024:
+        return False
+    data = path.read_bytes()
+    if not data.startswith(b'\x89PNG\r\n\x1a\n'):
+        return False
+    offset, idat, first = 8, False, True
+    while offset + 12 <= len(data):
+        length, tag = struct.unpack_from('>I4s', data, offset)
+        end = offset + 8 + length
+        if end + 4 > len(data):
+            return False
+        body = data[offset + 8:end]
+        if zlib.crc32(tag + body) != struct.unpack_from('>I', data, end)[0]:
+            return False
+        if first:
+            if tag != b'IHDR' or length != 13:
+                return False
+            width, height, depth, kind, comp, filt, interlace = struct.unpack('>IIBBBBB', body)
+            if not (0 < width <= 1920 and 0 < height <= 1920 and depth == 8
+                    and kind in (2, 6) and (comp, filt, interlace) == (0, 0, 0)):
+                return False
+            first = False
+        elif tag == b'IDAT':
+            idat = idat or bool(length)
+        elif tag == b'IEND':
+            return idat and length == 0 and end + 4 == len(data)
+        else:
+            return False
+        offset = end + 4
+    return False
+
 def audit(paths):
     errors = []
     for path in paths:
@@ -34,6 +75,11 @@ def audit(paths):
             errors.append(str(relative) + ': forbidden filename/type')
         if path.is_symlink():
             errors.append(str(relative) + ': symlinks are not distributable')
+            continue
+        if is_wiki_image(path, relative):
+            if not validate_wiki_png(path):
+                errors.append(str(relative) + ': invalid Wiki evidence PNG')
+            continue
         try:
             content = path.read_text(encoding='utf-8-sig')
         except UnicodeError:

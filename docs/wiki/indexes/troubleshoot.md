@@ -1,0 +1,63 @@
+# 排故
+
+自动生成。编辑工艺页，不手改此页。
+
+## 16 位导出后遮罩仍有阶梯或跳变
+
+- [MW-013 · 验证辅助遮罩的实际位深](../techniques/013-verify-helper-mask-depth.md) · 独立复验
+
+## 原尺寸正常，远处或缩图出现接缝
+
+- [MW-008 · 用缩图定位 UV 边缘渗色](../techniques/008-padding-mips.md) · 单件复现
+
+## 只有镜像侧的刻痕凹凸反了
+
+- [MW-009 · 区分镜像切线与绿色轴错误](../techniques/009-mirror-tangents.md) · 单件复现
+
+## 导出 2K 后边缘遮罩仍显粗糙
+
+- [MW-012 · 按镜头检验辅助图分辨率](../techniques/012-match-mesh-map-resolution.md) · 独立复验
+
+## 抛光把底色改灰或金属度下降
+
+- [MW-001 · 把手只改粗糙度](../techniques/001-grip-roughness.md) · 单件复现
+
+## 有命令但材质事务不启动
+
+- [MW-006 · 区分 CLI 能发现与事务能执行](../techniques/006-linux-procedural.md) · 单件复现
+
+## 每处掉漆都长出同样的锈
+
+- [MW-003 · 分离掉漆、露钢和锈蚀](../techniques/003-chip-and-rust.md) · 单件复现
+
+## 法线看似平整或旋转 UV 后接缝突变
+
+- [MW-015 · 用偏斜样片核对法线 UV](../techniques/015-check-tangent-uv-basis.md) · 单件复现
+
+## 烘焙报重叠或 UV 越界
+
+- [MW-007 · 烘焙前查目标槽 UV](../techniques/007-uv-preflight.md) · 单件复现
+
+## 磨损与积尘铺满表面
+
+- [MW-004 · 按几何位置分配旧化信号](../techniques/004-mesh-map-roles.md) · 来源已核
+
+## 磨损边界局部跳变，整张图统计却正常
+
+- [MW-014 · 定位窄阈值造成的局部遮罩跳变](../techniques/014-trace-narrow-mask-remap.md) · 单件复现
+
+## 程序导出拒绝 AO 通道
+
+- [MW-011 · 把 AO 辅助遮罩与交付 AO 分开](../techniques/011-ao-routing.md) · 单件复现
+
+## 贴图搬走后重建提示资源不见或变化
+
+- [MW-010 · 搬运贴图后核对摘要再重建](../techniques/010-relocate-bake.md) · 单件复现
+
+## 重建变灰或镜像 UV 凹凸反转
+
+- [MW-005 · 从贴图重建时保持颜色空间与切线](../techniques/005-rebuild-pbr.md) · 来源已核
+
+## 重算覆盖手工笔迹
+
+- [MW-002 · 分开保存程序遮罩与手工加减](../techniques/002-local-mask.md) · 单件复现

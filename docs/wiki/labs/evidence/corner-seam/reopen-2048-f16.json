@@ -1,0 +1,32 @@
+{
+  "mode": "2048-f16",
+  "opened": "pass",
+  "same_file_sha256": "bc5304cf014c3abd0ffa7de273341c6c67b8643372659337fb1ad90066e52b9c",
+  "declared_png_hashes": {
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/alpha.png": "06fa4382ae43a30e2ce49be2dbf50b29e174cce18f9e4700b15662474cd5e6f8",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/base_color.png": "9dc127446daa600c48d403d03634d91de677ef460bbf9451f19c179d7a8d2be6",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/coat_roughness.png": "81bf1bf2a0ebf4badb277a9b096c921e305a41e6140ebec058048d2a55237994",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/coat_weight.png": "6bae4be35f59221bdd7e968c0f93912110d7b0a87c4743d6073c59be0d35fcb6",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/ior.png": "eec988f355edfa1e0e996d98a301ca1658958f6a2b1edf91b9e6ddbe0feaad16",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/metallic.png": "5810130f0836086891e11bf305a95e99a8cecf10703fd68f4ba749fc68b3845c",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/normal.png": "d2719836613f37f9a5ae8f2d25634d2a9d0235c55d246fdd3120dc8321e09b77",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/roughness.png": "b08f723d7ed1c30e2a82c22b6ba305312397fd80cc0c4f2e94abd0f07e7b1785",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/transmission.png": "f78da91b53658435c670774c12c6054bc4bd2f0cf1dbd66cdc8729d3a0751718"
+  },
+  "loaded_in_move_tree": [
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/alpha.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/base_color.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/coat_roughness.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/coat_weight.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/ior.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/metallic.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/normal.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/roughness.png",
+    "baked/bake-c60058a8dfb14fce95d0eaa077d8dafa/transmission.png"
+  ],
+  "undeclared": [],
+  "unneeded_declared": [],
+  "offline_factory_startup": true,
+  "source_unchanged": true,
+  "render_on_moved_copy": "not_run"
+}

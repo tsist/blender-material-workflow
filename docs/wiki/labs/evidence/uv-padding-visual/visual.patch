@@ -1,0 +1,127 @@
+--- a/tools/blenderctl/material_procedural.py
++++ b/tools/blenderctl/material_procedural.py
+@@ -246,6 +246,38 @@
+                 if image['bytes'] > 2 * 1024 * 1024:
+                     raise Failure('RESOURCE_LIMIT', 'Preview exceeds 2 MiB; choose a smaller preview')
+                 decoded = output_check(Path(image['file']))
++                if label in report.get('r18',{}).get('variants',{}):
++                    from mathutils import Vector
++                    from bpy_extras.object_utils import world_to_camera_view
++                    import json
++                    plan=json.loads((job/'r18-visual-plan.json').read_text())
++                    scene,camera=rig['scene'],rig['camera']
++                    if scene.render.use_texture_cache or scene.render.use_auto_generate_texture_cache:
++                        raise Failure('VALIDATION_FAILED','unexpected texture-cache state')
++                    if scene.render.use_simplify:
++                        raise Failure('VALIDATION_FAILED','unexpected Simplify state')
++                    seg=[]
++                    visible=[]
++                    W,H=scene.render.resolution_x,scene.render.resolution_y
++                    graph=rig['view_layer'].depsgraph
++                    center=Vector(rig['source_center'])
++                    ps=[Vector(x)-center for x in plan['seam_world']]
++                    for p in ps:
++                        coord=world_to_camera_view(scene,camera,p)
++                        seg.append([float(coord.x*W),float((1-coord.y)*H)])
++                    for i in range(1,20):
++                        p=ps[0].lerp(ps[1],i/20)
++                        normal=camera.matrix_world.to_3x3()@Vector((0,0,1))
++                        hit=scene.ray_cast(graph,p+normal,-normal)
++                        visible.append(bool(hit[0] and (hit[1]-p).length<.0006))
++                    framing['r18']={'frame_px':[W,H],'seam_px':seg,'visible_hit_probes':sum(visible),
++                        'visible_total':len(visible),'texture_cache':scene.render.use_texture_cache,
++                        'auto_generate_cache':scene.render.use_auto_generate_texture_cache,
++                        'texture_limit':getattr(scene.cycles,'texture_limit_render',None),
++                        'simplify':scene.render.use_simplify,
++                        'seed':scene.cycles.seed,'samples':scene.cycles.samples}
++                    if (not all(0<x<W and 0<y<H for x,y in seg)) or sum(visible)<15:
++                        raise Failure('VALIDATION_FAILED','R18 seam is not substantially visible in the intended frame')
+                 row.update(image, status='pass', framing=framing, decoded=decoded,
+                            device=rendered['device'], engine=spec['engine'])
+             except Exception as error:
+@@ -320,6 +352,74 @@
+         raise Failure('VALIDATION_FAILED', 'Reconstruction contains no exported images')
+-
+-
++
++
++
++def _r18_visual_current(params, manifest, job, report):
++    """Isolated research hook: use existing baked PBR maps and vary only roughness."""
++    import json
++    from material_workflow_addon import procedural_bake
++    from mathutils import Vector
++    from bpy_extras.object_utils import world_to_camera_view
++
++    inputs = {str(Path(x['file']).resolve()):x['expected_sha256'] for x in params['resources']}
++    cfgfile, = [p for p in inputs if Path(p).name == 'r18-lab-config.json']
++    staged = {x['expected_sha256']: Path(x['file']) for x in report['resources']
++              if Path(x['file']).parent == job/'textures'}
++    cfg = json.loads(staged[inputs[cfgfile]].read_text())
++    if cfg['schema'] != 'wm-r18-visual-v1':
++        raise Failure('INVALID_REQUEST','Wrong R18 config schema')
++    def path_for(entry):
++        p = str(Path(entry['file']).resolve())
++        if inputs.get(p) != entry['sha256'] or digest(staged[entry['sha256']]) != entry['sha256']:
++            raise Failure('CONFLICT','R18 input does not match guarded bake SHA')
++        return str(staged[entry['sha256']])
++    labels = ['extend4_2048','extend16_2048','adjacent8_2048','zero_2048',
++              'extend4_256','extend16_256','adjacent8_256','zero_256']
++    manifest = copy.deepcopy(manifest)
++    manifest['preview'].update(width=384,height=384,samples=48)
++    framing = manifest['preview']['views'][0]
++    manifest['preview']['views'] = [dict(framing,id='detail',focus=cfg['focus'],zoom=4.5),
++                                   dict(framing,id='whole',focus=[.5,.5,.5],zoom=1.0)]
++    atomic_json(job/'r18-visual-plan.json',{'views':manifest['preview']['views'],
++        'seam_world':cfg['seam_world'],'baked_target':manifest['target']})
++    study={'texture_path':'Cycles full-image, explicit PNG resolution, not tiled mip selection',
++           'variants':{}, 'actual_views':{}}
++    report['r18']=study
++    for label in labels:
++        entry=cfg['candidates'][label]
++        baked = copy.deepcopy(cfg['original'])
++        for item in baked['channels'].values():
++            item['file']=path_for(item)
++        rough = baked['channels']['roughness']
++        rough.update(file=path_for(entry),sha256=entry['sha256'],width=entry['side'],height=entry['side'])
++        bpy.ops.wm.open_mainfile(filepath=report['author']['file'], load_ui=False, use_scripts=False)
++        activate(manifest['context'])
++        obj = _target(manifest)
++        before = snapshot()
++        exact = procedural_bake.rebuild_material(baked,name='R18 '+label)
++        files={Path(v['file']) for v in baked['channels'].values()}
++        _verify_rebuilt(exact,files)
++        obj.material_slots[manifest['target']['material_slot']].link='OBJECT'
++        obj.material_slots[manifest['target']['material_slot']].material=exact
++        existing = {_key(x) for x in before['scene']['datablocks']}
++        additions = {('Material',exact.name,None)}
++        additions.update(('Image',n.image.name,None) for n in exact.node_tree.nodes if getattr(n,'image',None))
++        _verify_preservation(before,snapshot(),manifest['target'],obj.data.name,additions-existing)
++        saved = _save_reopen(job/(label+'.blend'), manifest['context'], job, report)
++        rebuilt = _target(manifest).material_slots[manifest['target']['material_slot']].material
++        _verify_rebuilt(rebuilt,files)
++        node=rebuilt.node_tree.nodes['Baked roughness']
++        if digest(Path(bpy.path.abspath(node.image.filepath))) != entry['sha256'] or list(node.image.size) != [entry['side']]*2:
++            raise Failure('VALIDATION_FAILED','R18 roughness image did not survive cold reopening')
++        study['variants'][label] = dict(texture_sha256=entry['sha256'],native_exr_sha256=entry['native_exr_sha256'],
++            side=entry['side'],interpolation=node.interpolation,colorspace=node.image.colorspace_settings.name,
++            project_sha256=saved['expected_sha256'],preserved_non_target=True,
++            other_channel_hashes={k:v['sha256'] for k,v in baked['channels'].items() if k!='roughness'})
++        status=_render_views(saved,manifest,_resources(job,report['resources']),job,label,report)
++        if status != 'pass':
++            raise Failure('VALIDATION_FAILED','R18 render comparison incomplete: '+label)
++    report['checks']['r18_guarded_reconstruction_render_decode']='pass'
++    return 'pass'
++
+ def _export_current(params, manifest, job, report):
+     from material_workflow_addon import procedural_bake
+     activate(manifest['context'])
+@@ -434,7 +534,7 @@
+             export_status = 'pass'
+             if export_only or params.get('export') is not None:
+                 bpy.ops.wm.open_mainfile(filepath=report['author']['file'], load_ui=False, use_scripts=False)
+-                export_status = _export_current(params, manifest, job, report)
++                export_status = _r18_visual_current(params, manifest, job, report)
+             verify_input_hashes(params)
+             report['checks']['source_and_resource_sha_unchanged'] = 'pass'
+             report['status'] = 'pass' if author_status == export_status == 'pass' else 'partial'
