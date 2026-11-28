@@ -34,6 +34,10 @@ def audit(paths):
             errors.append(str(relative) + ': forbidden filename/type')
         if path.is_symlink():
             errors.append(str(relative) + ': symlinks are not distributable')
+        if path.suffix.lower() == '.png' and relative.parts[:2] == ('_ui_kit', 'icons'):
+            if path.read_bytes()[:8] != b'\x89PNG\r\n\x1a\n':
+                errors.append(str(relative) + ': invalid png icon')
+            continue
         try:
             content = path.read_text(encoding='utf-8-sig')
         except UnicodeError:

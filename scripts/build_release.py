@@ -38,15 +38,16 @@ def main():
         raise SystemExit('Manifest and bl_info versions differ')
     skills = json.loads((ROOT / 'skills/manifest.json').read_text())['bundle_version']
     # Runtime files are root modules only; development resources belong in the source ZIP.
-    runtime = [p for p in files if p.parent == ROOT and
-               (p.suffix == '.py' or p.name in {'blender_manifest.toml', 'LICENSE', 'README.md'})]
+    runtime = [p for p in files if (p.parent == ROOT and
+               (p.suffix == '.py' or p.name in {'blender_manifest.toml', 'LICENSE', 'README.md'})) or
+               (p.is_relative_to(ROOT / '_ui_kit') and p.suffix in {'.py', '.png'})]
     required = {'__init__.py', 'blender_manifest.toml', 'LICENSE', 'core.py', 'core_v2.py', 'ui.py', 'job_bridge.py'}
     if not required <= {p.name for p in runtime}: raise SystemExit('Incomplete extension')
     entries = [('blender-skills-' + skills + '/' + p.relative_to(ROOT).as_posix(), p.read_bytes())
                for p in files if p.is_relative_to(ROOT / 'skills')]
     entries.append(('blender-skills-' + skills + '/install_skills.py', (ROOT / 'scripts/install_skills.py').read_bytes()))
     payloads = {
-        f'material-workflow-{version}.zip': archive([(p.name, (ROOT / 'docs/EXTENSION_README.md').read_bytes() if p.name == 'README.md' else p.read_bytes()) for p in runtime]),
+        f'material-workflow-{version}.zip': archive([(p.relative_to(ROOT).as_posix(), (ROOT / 'docs/EXTENSION_README.md').read_bytes() if p.name == 'README.md' else p.read_bytes()) for p in runtime]),
         f'material-workflow-{version}-source.zip': archive([(f'material-workflow-{version}/' + p.relative_to(ROOT).as_posix(), p.read_bytes()) for p in files]),
         f'blender-skills-{skills}.zip': archive(entries),
     }

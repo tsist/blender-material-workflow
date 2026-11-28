@@ -104,11 +104,20 @@ def _emission(material):
 
 def bake_projection(context, target, sources, uv_layer, output_dir, *,
                     size=1024, extrusion=0.01, distance=0.02, cage=None,
-                    ao_distance=0.02, curvature_radius=0.005, samples=16, margin=8):
+                    ao_distance=0.02, curvature_radius=0.005, samples=16, margin=8,
+                    channels=None, device='CPU', progress=None):
     """Return the path of a complete manifest. Failed runs remain unpublished."""
     import bpy
     import numpy as np
 
+    requested = tuple(CHANNELS) if channels is None else tuple(channels)
+    if not requested or len(set(requested)) != len(requested) or set(requested) - set(CHANNELS):
+        _fail('Select at least one distinct projection channel')
+    complete = set(requested) == set(CHANNELS)
+    if device not in {'CPU', 'GPU'}:
+        _fail('Projection device must be CPU or GPU')
+    if progress is None:
+        progress = lambda *_: None
     sources = tuple(sources)
     inputs = (target, *sources, *((cage,) if cage else ()))
     if context.mode != 'OBJECT' or not sources or len(set(inputs)) != len(inputs):
@@ -165,7 +174,7 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
         destination = base / ('projection-' + uuid.uuid4().hex[:12])
         destination.mkdir(parents=True)
         scene.render.engine = 'CYCLES'
-        scene.cycles.device = 'CPU'
+        scene.cycles.device = device
         scene.cycles.samples = samples
         scene.cycles.use_denoising = False
         scene.render.bake.margin_type = 'EXTEND'
@@ -181,20 +190,23 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
 
         source_inputs = []
         for obj in contributors:
-            attr = _curvature(obj.data, obj.matrix_world, curvature_radius)
             material = bpy.data.materials.new('MW Projection Source')
             materials.append(material)
             obj.data.materials.append(material)
             source_tree, emission_color = _emission(material)
-            curve = source_tree.nodes.new('ShaderNodeAttribute')
-            curve.attribute_name = attr
-            ao = source_tree.nodes.new('ShaderNodeAmbientOcclusion')
-            ao.inputs['Distance'].default_value = ao_distance
-            ao.samples = samples
-            # A coincident low mesh is present during Selected to Active.
-            # Recess AO is evaluated on the hit source surface itself.
-            ao.only_local = True
-            source_inputs.append((source_tree.links, emission_color, curve.outputs['Fac'], ao.outputs['AO']))
+            channel_outputs = {}
+            if 'curvature' in requested:
+                curve = source_tree.nodes.new('ShaderNodeAttribute')
+                curve.attribute_name = _curvature(obj.data, obj.matrix_world, curvature_radius)
+                channel_outputs['curvature'] = curve.outputs['Fac']
+            if 'ao' in requested:
+                ao = source_tree.nodes.new('ShaderNodeAmbientOcclusion')
+                ao.inputs['Distance'].default_value = ao_distance
+                ao.samples = samples
+                # AO samples the hit source surface independently of the low mesh.
+                ao.only_local = True
+                channel_outputs['ao'] = ao.outputs['AO']
+            source_inputs.append((source_tree.links, emission_color, channel_outputs))
 
         if window:
             window.scene = scene
@@ -237,7 +249,9 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
             finally:
                 bpy.data.images.remove(image)
 
+        progress(0.2, '正在检查目标 UV 覆盖')
         covered = witness('Target UV coverage', False)
+        progress(0.35, '正在检查高模投射命中')
         hits = witness('Named source hit witness', True)
         covered_count = int(np.count_nonzero(covered))
         unhit = covered & ~hits
@@ -246,10 +260,12 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
             _fail(f'{target.name}: no confirmed ray hits on the target UV')
 
         maps = {}
-        for name, meaning in CHANNELS.items():
+        names = {'normal': '切线法线', 'curvature': '曲率', 'ao': '环境遮蔽'}
+        for index, name in enumerate(requested):
+            progress(0.48 + 0.4 * index / len(requested), '正在烘焙' + names[name])
             if name != 'normal':
-                for links, socket, convex, visibility in source_inputs:
-                    links.new(convex if name == 'curvature' else visibility, socket)
+                for links, socket, outputs in source_inputs:
+                    links.new(outputs[name], socket)
             live_image = bake(name, 'NORMAL' if name == 'normal' else 'EMIT', True, margin)
             if missed:
                 # Keep missed texels neutral in the material. The independent
@@ -261,10 +277,11 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
             path = destination / (name + '.png')
             entry = _save_verified(live_image, path, 'Non-Color', '16')
             live_image = None
-            maps[name] = {**entry, 'file': path.name, 'meaning': meaning}
+            maps[name] = {**entry, 'file': path.name, 'meaning': CHANNELS[name]}
 
         report = {
-            'schema': 'mw-projection-1.0', 'status': 'complete', 'blender': bpy.app.version_string,
+            'schema': 'mw-projection-1.0' if complete else 'mw-projection-maps-1.0',
+            'status': 'complete', 'blender': bpy.app.version_string,
             'target': target.name, 'sources': [obj.name for obj in sources], 'uv_layer': uv_layer,
             'identity': identity, 'uv_check': uv_check, 'maps': maps,
             'witness': {'target_texels': covered_count, 'missed_texels': missed,
@@ -273,7 +290,8 @@ def bake_projection(context, target, sources, uv_layer, output_dir, *,
                          'ao_distance': ao_distance, 'curvature_radius': curvature_radius,
                          'ao_scope': 'hit source object', 'samples': samples, 'margin': margin},
         }
-        manifest = destination / 'projection.json'
+        progress(0.92, '正在核验贴图并写入报告')
+        manifest = destination / ('projection.json' if complete else 'projection-maps.json')
         temporary = destination / 'projection.tmp'
         temporary.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
         temporary.replace(manifest)

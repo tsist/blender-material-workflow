@@ -12,6 +12,7 @@
 
 - **简单刚性运动**（台灯摆臂、旋钮旋转、门盖开合）：直接设好物体原点、父子层级或基础变换约束，几步做完就能交动画。
 - **角色全身、四肢 FK/IK、面部表情与服装附件**：读 [blender-rigging](https://github.com/tsist/blender-rigging-workflow/blob/main/skills/blender-rigging/SKILL.md)，用 `discover --product rigging` 查当前可用的骨架生成、体素求权、部件转权、选骨局修与表情绑定入口。
+- **已有角色接身体动作或做姿态纠偏**。保留 C94 与普通 FK 的原骨、蒙皮和已有 Action，显式交接源 Take、目标 Action/Slot、脚底校准与已知关节边界。[原控件摆姿、接片和现场续作](https://github.com/tsist/blender-rigging-workflow/blob/main/skills/blender-rigging/references/rigging-posing-win53.md)
 - **分两步走，先骨后皮**：新角色先做出未蒙皮的骨架，摆出角色实际要做的弯肘、屈膝、抬臂姿态检查关节枢轴与轴向；骨架过关后再跑蒙皮求权、修肩胯折痕、挂衣物附件和表情形态键。
 
 ## 交给下游什么

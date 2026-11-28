@@ -18,6 +18,8 @@ from . import procedural_core as core
 from .procedural_examples import make_recipe
 from .procedural_contract import normalize_manifest, EXPORT_CHANNELS
 from .procedural_bake import bake_channels, rebuild_material
+from . import workbench_jobs
+from ._ui_kit import apply_node_theme, ensure_object_mode, get_theme
 
 FAMILY_ITEMS = [
     ('painted_metal', '漆面金属', '金属底材、涂漆、边缘掉漆、局部锈和积灰'),
@@ -48,7 +50,7 @@ def _write_json(path, value):
 def _bindings(context):
     obj = context.object
     if not obj or obj.type != 'MESH' or obj.mode != 'OBJECT' or context.mode != 'OBJECT':
-        raise WorkflowError('ui_target', '请选择Object模式下有UV的活动网格')
+        raise WorkflowError('ui_target', '请选择有 UV 的活动网格')
     if obj.name not in context.view_layer.objects or not obj.data.polygons:
         raise WorkflowError('ui_target', '活动网格必须属于当前视图层且包含面')
     name = context.scene.mwp_ui_uv or (obj.data.uv_layers.active.name if obj.data.uv_layers.active else '')
@@ -91,9 +93,28 @@ def visible_controls(material, scope='ALL', text=''):
     return result
 
 
+def _theme_material(material):
+    if material is None or material.node_tree is None or core.MANIFEST not in material:
+        return
+    for node in material.node_tree.nodes:
+        if not node.get('mwp_node'):
+            continue
+        apply_node_theme(node, 'material')
+        if node.type == 'GROUP' and node.node_tree:
+            for managed in node.node_tree.nodes:
+                if managed.get('mwp_node'):
+                    apply_node_theme(managed, 'material')
+
+
+def _workdir(scene):
+    if not scene.mwp_ui_work_dir:
+        return Path(bpy.app.tempdir).resolve()
+    return _absolute_path(bpy.path.abspath(scene.mwp_ui_work_dir), '工作目录', directory=True)
+
+
 class _ProceduralOperator:
     def new_run(self, context, purpose):
-        root = _absolute_path(context.scene.mwp_ui_work_dir, '工作目录', directory=True)
+        root = _workdir(context.scene)
         run = root / ('procedural-' + purpose + '-' + uuid.uuid4().hex)
         run.mkdir(exist_ok=False)
         self._owned_run = str(run)
@@ -110,7 +131,8 @@ class _ProceduralOperator:
         self._owned_run = ''
         context.scene.mwp_ui_error = ''
         try:
-            self.run(context)
+            with ensure_object_mode(context):
+                self.run(context)
             return {'FINISHED'}
         except Exception as error:
             message = getattr(error, 'code', 'procedural_ui') + ': ' + str(error)
@@ -148,6 +170,7 @@ class MWP_OT_create(_ProceduralOperator, bpy.types.Operator):
         run = self.new_run(context, 'create')
         _write_json(run / 'request.json', recipe)
         report = core.apply_material(recipe, work_dir=run)
+        _theme_material(current_material(context))
         self.finish(context, run, {'status': 'complete', 'operation': 'create', 'result': report}, '已创建程序化材质')
 
 
@@ -174,6 +197,7 @@ class MWP_OT_update(_ProceduralOperator, bpy.types.Operator):
         identity = live['material']['id']
         report = core.apply_material(recipe, work_dir=run)
         updated = current_material(context)
+        _theme_material(updated)
         actual = core.get_stored_manifest(updated)
         if actual['material']['id'] != identity:
             raise WorkflowError('managed_conflict', '更新后材质身份意外改变')
@@ -207,6 +231,7 @@ class MWP_OT_load(_ProceduralOperator, bpy.types.Operator):
         run = self.new_run(context, 'load')
         _write_json(run / 'request.json', recipe)
         report = core.apply_material(recipe, work_dir=run)
+        _theme_material(current_material(context))
         self.finish(context, run, {'status': 'complete', 'operation': 'load', 'template': str(path), 'result': report}, '已将模板新建到当前目标')
 
 
@@ -251,16 +276,39 @@ class MWP_OT_export(_ProceduralOperator, bpy.types.Operator):
         self.finish(context, run, receipt, '已导出贴图并保留新的重建材质')
 
 
+class MWP_OT_export_background(_ProceduralOperator, bpy.types.Operator):
+    bl_idname = 'material_workflow.procedural_export_background'
+    bl_label = '后台导出 PBR 贴图'
+
+    def run(self, context):
+        _bindings(context)
+        _managed(context)
+        output = _workdir(context.scene)
+
+        def complete(scene, ok, result):
+            if ok:
+                scene.mwp_ui_result_dir = result['directory']
+                scene.mwp_ui_last_report = result['receipt']
+                scene.mwp_ui_status = '已导出 PBR 贴图和独立重建材质'
+            workbench_jobs.finish(scene, ok, result, '已导出 PBR 贴图和独立重建材质')
+
+        workbench_jobs.start(context, '导出 PBR 贴图',
+                             {'job': 'procedural_export', 'output': str(output)}, complete)
+
+
 class MWP_PT_panel(bpy.types.Panel):
     bl_idname = 'MWP_PT_procedural'
     bl_label = '程序化PBR'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Material Workflow'
+    bl_category = get_theme('material').tab_label
 
     def draw(self, context):
-        layout, scene = self.layout, context.scene
-        layout.label(text='当前活动网格 · 明确槽与UV', icon='MATERIAL')
+        MWP_PT_panel.draw_contents(self.layout, context)
+
+    @staticmethod
+    def draw_contents(layout, context):
+        scene = context.scene
         layout.prop(scene, 'mwp_ui_slot')
         obj = context.object
         if obj and obj.type == 'MESH':
@@ -295,18 +343,18 @@ class MWP_PT_panel(bpy.types.Panel):
                     controls = visible_controls(material, scene.mwp_ui_control_scope, scene.mwp_ui_control_filter)
                     for socket in controls:
                         row = box.row(); row.enabled = not socket.is_linked
-                        row.prop(socket, 'default_value', text=socket.name)
+                        row.prop(socket, 'default_value', text=_control_label(socket.name))
                     if not controls: box.label(text='没有匹配的参数；可按层ID、源ID或通道筛选')
                 except (ValueError, TypeError, KeyError):
                     box.label(text='参数结构异常，请检查材质节点', icon='ERROR')
         box = layout.box(); box.prop(scene, 'mwp_ui_json_path')
-        box.operator('material_workflow.procedural_load')
+        box.operator('material_workflow.procedural_load', text='套用模板')
         row = box.row(); row.enabled = managed
         row.operator('material_workflow.procedural_template_save')
         box = layout.box(); box.label(text='PBR导出')
         box.prop(scene, 'mwp_ui_export_size'); box.prop(scene, 'mwp_ui_bake_samples')
-        row = box.row(); row.enabled = managed
-        row.operator('material_workflow.procedural_export')
+        row = box.row(); row.enabled = managed and not workbench_jobs.RUNNER.running
+        row.operator('material_workflow.procedural_export_background')
         if scene.mwp_ui_rebuilt_material: box.label(text='重建材质：' + scene.mwp_ui_rebuilt_material)
         if scene.mwp_ui_status: layout.label(text=scene.mwp_ui_status, icon='INFO')
         if scene.mwp_ui_result_dir:
@@ -319,7 +367,22 @@ class MWP_PT_panel(bpy.types.Panel):
                 box.label(text=scene.mwp_ui_error[start:start+65])
 
 
-CLASSES = (MWP_OT_create, MWP_OT_update, MWP_OT_load, MWP_OT_template_save, MWP_OT_export, MWP_PT_panel)
+def _control_label(identifier):
+    key = identifier.rsplit('/', 1)[-1]
+    labels = {
+        'base_color': '基础色', 'roughness': '粗糙度', 'metallic': '金属度',
+        'alpha': '透明度', 'normal_strength': '法线强度', 'coat_weight': '清漆权重',
+        'coat_roughness': '清漆粗糙度', 'ior': '折射率', 'transmission_weight': '透射权重',
+        'opacity': '不透明度', 'scale': '缩放', 'rotation': '旋转', 'location': '位移',
+        'color': '颜色', 'strength': '强度', 'detail': '细节', 'distortion': '扭曲',
+        'to_min': '输出最小值', 'to_max': '输出最大值', 'from_min': '输入最小值',
+        'from_max': '输入最大值', 'factor': '系数', 'enabled': '启用',
+    }
+    return labels.get(key, identifier)
+
+
+CLASSES = (MWP_OT_create, MWP_OT_update, MWP_OT_load, MWP_OT_template_save,
+           MWP_OT_export, MWP_OT_export_background)
 PROPS = {
     'mwp_ui_family': EnumProperty(name='材质族', items=FAMILY_ITEMS, default='painted_metal'),
     'mwp_ui_name': StringProperty(name='新建材质名称'),
@@ -329,13 +392,13 @@ PROPS = {
     'mwp_ui_timber_scale': FloatVectorProperty(name='木材局部采样倍率 XYZ', size=3, default=(1, 1, 1),
         min=1e-6, description='按局部模型单位和所需物理采样尺度填写三轴正倍率；先缩放后木轴旋转，不自动推断对象缩放或单位'),
     'mwp_ui_metal_region': EnumProperty(name='金属旧化区域', items=[('lower','下部接触区','局部Z下部与接触边缘'),('edges','边缘与凹部','盖板/边缘区域'),('seam','卷边接缝','已分件卷边或接缝；不自动识别几何')], default='lower'),
-    'mwp_ui_work_dir': StringProperty(name='绝对工作目录', subtype='DIR_PATH'),
+    'mwp_ui_work_dir': StringProperty(name='模板与贴图输出目录', subtype='DIR_PATH'),
     'mwp_ui_slot': IntProperty(name='材质槽（从0计）', default=0, min=0, max=63),
     'mwp_ui_uv': StringProperty(name='UV层（空=活动UV）'),
     'mwp_ui_mesh_size': EnumProperty(name='几何辅助图尺寸', items=SIZE_ITEMS, default='512'),
     'mwp_ui_export_size': EnumProperty(name='贴图尺寸', items=SIZE_ITEMS, default='2048'),
     'mwp_ui_bake_samples': IntProperty(name='烘焙采样', default=16, min=1, max=256),
-    'mwp_ui_json_path': StringProperty(name='清单或模板JSON', subtype='FILE_PATH'),
+    'mwp_ui_json_path': StringProperty(name='模板文件', subtype='FILE_PATH'),
     'mwp_ui_show_controls': BoolProperty(name='展开实际节点参数', default=False),
     'mwp_ui_control_scope': EnumProperty(name='参数范围', items=[('ALL','全部',''),('LAYER','图层',''),('SIGNAL','源信号','')], default='LAYER'),
     'mwp_ui_control_filter': StringProperty(name='层ID / 源ID / 通道筛选', default='roughness'),

@@ -3,14 +3,16 @@ import re
 from pathlib import Path
 
 import bpy
-from bpy.props import (BoolProperty, CollectionProperty, FloatProperty, IntProperty,
+from bpy.props import (BoolProperty, CollectionProperty, EnumProperty, FloatProperty, IntProperty,
                        PointerProperty, StringProperty)
 from bpy.types import Operator, Panel, PropertyGroup, UIList
 
 from .contract import WorkflowError
-from .projection_bake import bake_projection
+from .projection_bake import CHANNELS, bake_projection
+from . import workbench_jobs
+from ._ui_kit import apply_node_theme, ensure_object_mode, get_theme, primary_button, prop_column
 from .projection_delivery import deliver_project
-from .projection_material import (EFFECT_CONTROLS, attach_projection, effect_controls,
+from .projection_material import (EFFECT_CONTROLS, PROJECTION_NODE, attach_projection, effect_controls,
                                   validate_material_slots, verify_projection_binding,
                                   verify_projection_inputs)
 
@@ -227,10 +229,76 @@ class MWP_OT_attach_projection(_ProjectionOperator, Operator):
         pair = _pair(context.scene)
         if pair is None or not pair.target:
             raise ValueError('请选中带低模的配对')
-        report = attach_projection(context, pair.target, _absolute(pair.manifest),
-                                   sources=_sources(pair) or None, cage=pair.cage)
+        with ensure_object_mode(context):
+            report = attach_projection(context, pair.target, _absolute(pair.manifest),
+                                       sources=_sources(pair) or None, cage=pair.cage)
+        for slot in pair.target.material_slots:
+            tree = slot.material.node_tree if slot.material else None
+            node = tree.nodes.get(PROJECTION_NODE) if tree else None
+            if node and node.node_tree:
+                apply_node_theme(node, 'material')
+                for managed in node.node_tree.nodes:
+                    apply_node_theme(managed, 'material')
         pair.hit_rate = report['witness']['coverage_fraction']
         return f'已接入 {pair.target.name}，沿用已有烘焙图'
+
+
+class MWP_OT_bake_background(_ProjectionOperator, Operator):
+    bl_idname = 'material_workflow.projection_bake_background'
+    bl_label = '后台烘焙投射贴图'
+
+    def run(self, context):
+        scene = context.scene
+        pair = _pair(scene)
+        if pair is None or not pair.target or not pair.confirmed or not pair.uv_layer:
+            raise ValueError('请先确认低模、高模和目标 UV')
+        sources = _sources(pair)
+        if not sources:
+            raise ValueError('请选择至少一个高模对象')
+        channels = [name for name in CHANNELS if getattr(scene, 'mwp_projection_' + name)]
+        if not channels:
+            raise ValueError('请选择至少一个烘焙通道')
+        complete = len(channels) == len(CHANNELS)
+        if complete:
+            validate_material_slots(pair.target)
+        target = pair.target.name
+        source_names = [obj.name for obj in sources]
+        cage_name = pair.cage.name if pair.cage else None
+        size = scene.mwp_projection_size
+        raw_output = scene.mwp_projection_workdir
+        output = (Path(bpy.app.tempdir) / 'Blender AI Mesh Maps'
+                  if raw_output == '//MeshMaps' and not bpy.data.filepath else _absolute(raw_output))
+        request = {
+            'job': 'projection', 'target': target, 'sources': source_names,
+            'cage': cage_name, 'uv_layer': pair.uv_layer, 'output': str(output),
+            'device': scene.mwp_projection_device, 'channels': channels,
+            'settings': {**{name: getattr(pair, name) for name in
+                            ('extrusion', 'distance', 'ao_distance', 'curvature_radius')},
+                         'size': size, 'samples': scene.mwp_projection_samples,
+                         'margin': min(12, max(2, size // 128))},
+        }
+
+        def complete_bake(destination, ok, result):
+            if not ok:
+                workbench_jobs.finish(destination, False, result, '')
+                return
+            destination.mwp_projection_result_path = result['manifest']
+            message = f'贴图完成（{result["device"]}），命中 {result["coverage"]:.1%}'
+            if complete:
+                for saved in destination.mwp_projection_pairs:
+                    if ((saved.target.name if saved.target else None) == target
+                            and [row.object.name if row.object else None for row in saved.sources] == source_names
+                            and (saved.cage.name if saved.cage else None) == cage_name
+                            and saved.uv_layer == request['uv_layer'] and saved.confirmed):
+                        saved.manifest = result['manifest']
+                        saved.hit_rate = result['coverage']
+                        message += '，可接入已烘焙贴图'
+                        break
+            destination.mwp_projection_status = message
+            workbench_jobs.finish(destination, True, result, message)
+
+        workbench_jobs.start(context, '投射烘焙', request, complete_bake)
+        return '已启动后台投射烘焙'
 
 
 class MWP_OT_projection_delivery(_ProjectionOperator, Operator):
@@ -274,10 +342,14 @@ class MWP_PT_projection_panel(Panel):
     bl_label = '高低模烘焙'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Material Workflow'
+    bl_category = get_theme('material').tab_label
 
     def draw(self, context):
-        layout, scene = self.layout, context.scene
+        self.draw_contents(self.layout, context)
+
+    @staticmethod
+    def draw_contents(layout, context, icon_value=0):
+        scene = context.scene
         row = layout.row(align=True)
         row.operator('material_workflow.projection_suggest', icon='VIEWZOOM')
         row.operator('material_workflow.projection_add', text='', icon='ADD')
@@ -308,32 +380,44 @@ class MWP_PT_projection_panel(Panel):
             if pair.target and pair.target.type == 'MESH':
                 box.prop_search(pair, 'uv_layer', pair.target.data, 'uv_layers')
             box.prop(pair, 'confirmed')
-            box.prop(scene, 'mwp_projection_size')
-            box.prop(scene, 'mwp_projection_workdir')
+            col = prop_column(box, align=True)
+            col.prop(scene, 'mwp_projection_size', text='分辨率')
+            col.prop(scene, 'mwp_projection_device', text='计算设备')
+            col.prop(scene, 'mwp_projection_workdir', text='烘焙目录')
+            flags = box.row(align=True)
+            for key, title in (('normal', '法线'), ('curvature', '曲率'), ('ao', 'AO')):
+                flags.prop(scene, 'mwp_projection_' + key, text=title, toggle=True)
             box.prop(scene, 'mwp_projection_advanced', toggle=True)
             if scene.mwp_projection_advanced:
                 for option in ('cage', 'extrusion', 'distance', 'ao_distance', 'curvature_radius'):
                     box.prop(pair, option)
                 box.prop(scene, 'mwp_projection_samples')
-            row = box.row()
-            row.enabled = bool(pair.confirmed and pair.target and pair.uv_layer)
-            row.operator('material_workflow.projection_bake', icon='RENDER_STILL')
+            primary_button(box, 'material_workflow.projection_bake_background', '后台烘焙',
+                           icon_value=icon_value, icon='RENDER_STILL',
+                           enabled=bool(pair.confirmed and pair.target and pair.uv_layer and
+                                        not workbench_jobs.RUNNER.running))
             box.prop(pair, 'manifest')
-            box.operator('material_workflow.projection_attach')
+            row = box.row()
+            row.enabled = bool(pair.manifest)
+            row.operator('material_workflow.projection_attach')
             if pair.hit_rate:
                 text = '存在漏烘，命中率' if pair.hit_rate < 1 else '来源射线命中'
                 box.label(text=f'{text} {pair.hit_rate:.2%}', icon='ERROR' if pair.hit_rate < 1 else 'INFO')
 
         layout.prop(scene, 'mwp_projection_output')
         layout.operator('material_workflow.projection_delivery', icon='FILE_FOLDER')
+        if scene.mwp_projection_result_path:
+            row = layout.row()
+            row.enabled = False
+            row.prop(scene, 'mwp_projection_result_path', text='最近烘焙报告')
         if scene.mwp_projection_status:
             layout.label(text=scene.mwp_projection_status, icon='INFO')
 
 
 CLASSES = (MWP_ProjectionSource, MWP_ProjectionPair, MWP_OT_suggest_projection,
            MWP_OT_add_projection, MWP_OT_remove_projection, MWP_OT_projection_source,
-           MWP_OT_bake_projection, MWP_OT_attach_projection, MWP_OT_projection_delivery,
-           MWP_UL_projection_pairs, MWP_PT_projection_panel)
+           MWP_OT_bake_projection, MWP_OT_bake_background, MWP_OT_attach_projection,
+           MWP_OT_projection_delivery, MWP_UL_projection_pairs)
 PROPERTIES = {
     'mwp_projection_pairs': CollectionProperty(type=MWP_ProjectionPair),
     'mwp_projection_index': IntProperty(min=0),
@@ -345,6 +429,14 @@ PROPERTIES = {
     'mwp_projection_samples': IntProperty(name='AO 采样', default=16, min=1, max=128),
     'mwp_projection_advanced': BoolProperty(name='高级投射设置'),
     'mwp_projection_status': StringProperty(options={'SKIP_SAVE'}),
+    'mwp_projection_normal': BoolProperty(default=True),
+    'mwp_projection_curvature': BoolProperty(default=True),
+    'mwp_projection_ao': BoolProperty(default=True),
+    'mwp_projection_device': EnumProperty(items=(
+        ('AUTO', '自动选择 GPU', '优先使用可用 GPU，随后回退 CPU'),
+        ('CPU', 'CPU', '使用 CPU 烘焙'),
+    )),
+    'mwp_projection_result_path': StringProperty(subtype='FILE_PATH', options={'SKIP_SAVE'}),
 }
 
 

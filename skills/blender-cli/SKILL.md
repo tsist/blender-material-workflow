@@ -31,9 +31,39 @@ $item = $d.data.actions.items[0]
 2. **顺着 `command_argv` 拼输入**：把真实文件路径和业务参数接在 `command_argv` 后面。返回里带有 `request_fields` 就填进请求 JSON；带有 `session_open_fields` 就在开现场会话时带上。
 3. **专项细则用 `describe` 查**：像 `material`、`uv`、`geometry`、`toon-workflow` 都自带 `describe` 子命令（如 `& $ctl material describe --operation study --section study`），不启动 Blender 就能读到参数分节说明。
 
+### 贴面扫掠的只读预览与提交
+
+Hard Surface Workflow `0.3.7` 在 Windows Blender `5.3.0` build `02f0899d78e3` 上提供 `surface_sweep`。锁站、圆弯、斜接、矩形和空心管的世界毫米配方见 [硬表面扫掠实跑例](https://github.com/tsist/blender-hard-surface-workflow/blob/main/skills/blender-hard-surface-modeling/SKILL.md#用命名站位做贴面扫掠)。
+
+```powershell
+$ctl = './blenderctl.ps1'
+& $ctl discover --product hard-surface
+& $ctl model flow-tools --tool surface_sweep
+
+# $src 为源 .blend，$reqJson 为 {object, params} 请求，$manifest 为新的清单文件
+# $context 从model inspect 核对，含 scene、view_layer、frame、mode、active_object、selected_objects
+$sha = (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash.ToLowerInvariant()
+$inspection = & $ctl model inspect $src --expected-sha256 $sha --surface-sweep $reqJson | ConvertFrom-Json
+if ($LASTEXITCODE -ne 0 -or -not $inspection.ok) { throw ($inspection.error | ConvertTo-Json -Compress) }
+$request = Get-Content -LiteralPath $reqJson -Raw | ConvertFrom-Json -AsHashtable
+$request.params.expected_preview_signature = $inspection.data.surface_sweep.preview_signature
+$null = $request.params.Remove('preview')
+@{context = $context; operations = @(@{
+    op = 'hard_surface.stack'
+    object = $request.object
+    tool = 'surface_sweep'
+    params = $request.params
+})} | ConvertTo-Json -Depth 32 | Set-Content -LiteralPath $manifest -Encoding utf8
+& $ctl model prepare --file $src --expected-sha256 $sha --manifest $manifest
+```
+
+`model inspect` 预览回执给出 `preview_signature`，填入提交的 `params.expected_preview_signature`。更新已有扫掠时，预览请求还需在 `params.expected_signature` 带上该输出最近提交的 `signature`，保持站位名、顺序和锁定边界，每次只改单个未锁站；提交时仍须使用刚预览的签名。按 `artifacts` 打开候选，检查几何与新签名。预览后若母壳或配方变化，重新预览并核对差异。
+
+在已存盘的工程中接手续改，`model panel-controls --params $inspectJson` 使用 `operation: "inspect-sweep"`、`edition: "0.3.7"`、绝对 `file`、`expected_sha256` 和 `object`（受管网格或其命名 Empty）。可加 `station_positions_mm` 指定一个站名及世界毫米坐标，例如 `{"Editable elbow":[-4,-5,36]}`。审看 `data.sweep_preview`，将 `data.commit_request` 原样存为 JSON 后运行 `model panel-controls --params $commitJson --output $newBlend`。该请求带 `operation: "commit-sweep"` 和 `expected.preview_sha256`。`$newBlend` 使用尚不存在的绝对路径，核对 `data.sweep_execution` 与 `data.independent_reopen.sweep`。 已存盘交接请求样例（`work/audit/<batch>/`）
+
 ## 第二步：建批次目录，先读后改
 
-每次任务在 `work/audit/<batch>//` 下建独立的 `jobs` 和 `transactions` 目录，全局参数统一放在子命令前面。
+每次任务在 `work/audit/<batch>/>/` 下建独立的 `jobs` 和 `transactions` 目录，全局参数统一放在子命令前面。
 
 ```powershell
 $batch = 'work/audit/<batch>/'
@@ -41,7 +71,7 @@ $jobs  = Join-Path $batch 'jobs'
 $tx    = Join-Path $batch 'transactions'
 New-Item -ItemType Directory -Path $jobs, $tx -Force | Out-Null
 
-$src = '<PROJECT_ROOT>/work\lamp\source.blend'
+$src = '<PROJECT_ROOT>\work\lamp\source.blend'
 $sha = (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash.ToLowerInvariant()
 
 # 先只读摸清对象名、材质槽与外部引用
@@ -64,21 +94,36 @@ $sha = (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash.ToLowerInvariant(
 - **材质手调**：目标窗口挂好会话后，运行 `& $ctl material handoff-live --session-dir $sDir --session-id $sId --operation inspect` 核对，再用 `--operation submit --mode SINGLE`（或 `BATCH`）生成带 SHA 的工作副本继续往下做。
 - **相机、几何节点、绑定、合成与剪辑**：分别走 `camera session-live`、`geometry session-live`、`rigging-workflow session-live`、`compositing session-live` 和 `video inspect-live`（先运行各自 `--help` 看会话目录参数）。
 
-## 第五步：看结果、做几何体检与冷重开
+## 第五步：一键真视口快检、几何体检与冷重开
 
 每次跑完同时看 `$LASTEXITCODE` 和返回 JSON 里的 `ok`。`ok` 为 `true` 时，顺着 `artifacts` 给出的路径取候选文件接着用；`ok` 为 `false` 时先读 `error` 和作业目录日志定位原因。
 
-1. **通用几何体检**：在白模里程碑、外部生成导入初筛或正式交付前，对保存好的 `.blend` 跑一次只读体检：
+1. **一键聚焦与真视口 4 视角快检（推荐优先）**：任何建模、绑定、UV、材质、布光迭代后，直接用隔离桌面真视口秒出预览图（0 弹窗/0 抢焦点，纯只读不改源 `.blend`，自动控图 ≤ 2048px）：
+   ```powershell
+   # 默认 Quad 四视角（顶/前-Y/右+X 正交 + 前3/4 透视）实体+45%半透明线框
+   & $ctl --jobs-dir $jobs --compact preview $candidate --output "$batch\quad_wire.png"
+
+   # 聚焦单个零件/集合：默认保留上下文查穿插；加 --isolate 独显目标但保留灯光世界
+   & $ctl --jobs-dir $jobs --compact preview $candidate --objects "Body,Handle" --isolate --mode matcap
+
+   # 同机位四阶段联检板（大形 / 半透明线框 / LookDev / Cycles DLSS 或 OptiX 回退）
+   & $ctl --jobs-dir $jobs --compact preview $candidate --compare-modes solid,solid_wire,material,rendered --view front_3q
+
+   # 其他专业检查模式与热会话复用
+   # --mode: wireframe(--xray) | solid(--solid-color random) | solid_wire(--wire-opacity 0.45) | matcap | face_orientation | material(--wire-overlay 0.35) | rendered(--render-engine cycles|eevee --denoiser auto|dlss|optix --strict-denoiser)
+   # 多轮迭代免冷启动：preview session start -> preview $file --session <id> [--framing-from prior.json] -> preview session stop <id>
+   ```
+2. **通用几何体检**：在白模里程碑、外部生成导入初筛或正式交付前，对保存好的 `.blend` 跑一次只读体检：
    ```powershell
    & $ctl --jobs-dir $jobs --compact model inspect $candidate --expected-sha256 $cSha --qa-profile game
    ```
    按用途选 `game`、`render`、`mobile_strict` 或 `print`。报告把负缩放、法线粗糙度贴图误设 `sRGB`、使用中的空材质槽、丢贴图归进 `hard_blockers`（先修清再往下交），把共面闪烁、浮空件、对称 UV 重叠、多边面归进 `review_signals` 供结合画面判断。属于无争议的纯数据贴图色彩空间或未用空材质槽，可在 `model prepare` 里加 `{"op": "qa.fix_safe", "profile": "game", "dry_run": false}` 在新副本上一键修好。
-2. **另起进程冷重开并看真图**：交付前对最终候选再跑一次 `inspect` 或 `project verify`（核对完整外部资源清单，包括贴图、VDB、USD 与模拟缓存），动画抽查关键帧数值，视觉任务渲出代表画面打开核对。
+3. **另起进程冷重开并看真图**：交付前对最终候选再跑一次 `inspect` 或 `project verify`（核对完整外部资源清单，包括贴图、VDB、USD 与模拟缓存），动画抽查关键帧数值，视觉任务用 `preview` 或正式渲染核对代表画面。
 
 ## 第六步：中断续跑与正式发布
 
 - **续跑**：`pipeline` 或 `workflow` 中断后，用原 `--jobs-dir` 跑 `pipeline resume <job_id>` 或 `workflow resume` 重评未完步骤；单步命令修好输入后从源副本重新提交。
-- **发布到正式位置或资产库**：工作候选验收通过后，写新文件用 `project plan-copy`，覆盖已授权目标或发布进 `<ASSET_LIBRARY>` 走 `asset plan` 加 `transaction apply`（全程保持同一个 `--transactions-dir`）。细节见 [恢复与发布](references/recovery.md)。
+- **发布到正式位置或资产库**：工作候选验收通过后，写新文件用 `project plan-copy`，覆盖已授权目标或发布进 `<ASSET_LIBRARY_ROOT>` 走 `asset plan` 加 `transaction apply`（全程保持同一个 `--transactions-dir`）。细节见 [恢复与发布](references/recovery.md)。
 
 ## 例子：给一件道具做交付前体检并修好贴图色彩空间
 
