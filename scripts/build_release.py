@@ -32,11 +32,11 @@ def main():
     files = public_files()
     errors = audit(files) + check()['errors']
     if errors: raise SystemExit('\n'.join(errors))
-    version = tomllib.loads((ROOT / 'blender_manifest.toml').read_text())['version']
-    info = re.search(r'"version": \(([^)]+)\)', (ROOT / '__init__.py').read_text()).group(1)
+    version = tomllib.loads((ROOT / 'blender_manifest.toml').read_text(encoding='utf-8'))['version']
+    info = re.search(r'"version": \(([^)]+)\)', (ROOT / '__init__.py').read_text(encoding='utf-8')).group(1)
     if tuple(map(int, version.split('.'))) != tuple(map(int, info.split(','))):
         raise SystemExit('Manifest and bl_info versions differ')
-    skills = json.loads((ROOT / 'skills/manifest.json').read_text())['bundle_version']
+    skills = json.loads((ROOT / 'skills/manifest.json').read_text(encoding='utf-8'))['bundle_version']
     # Runtime files are root modules only; development resources belong in the source ZIP.
     runtime = [p for p in files if (p.parent == ROOT and
                (p.suffix == '.py' or p.name in {'blender_manifest.toml', 'LICENSE', 'README.md'})) or
